@@ -1,24 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import './App.css'
 import Canvas from './components/Canvas'
-import LeftPanel from './components/LeftPanel'
-import RightPanel from './components/RightPanel'
 import FloatingSliders from './components/FloatingSliders'
-import DesignSpacePanel from './components/DesignSpacePanel'
+import LeftPanel from './components/LeftPanel'
+import { trialLogger } from './services/trialLogger'
 
 function App() {
   const [leftPanelOpen, setLeftPanelOpen] = useState(false)
-  const [rightPanelOpen, setRightPanelOpen] = useState(false)
-  const [designSpacePanelOpen, setDesignSpacePanelOpen] = useState(false)
   const [sliders, setSliders] = useState([
     { id: 1, label: 'Opacity', value: 50, min: 0, max: 100 },
     { id: 2, label: 'Scale', value: 75, min: 0, max: 100 },
     { id: 3, label: 'Rotation', value: 0, min: 0, max: 360 }
   ])
+  const [designCards, setDesignCards] = useState([])
+  const [currentTrialId, setCurrentTrialId] = useState(null)
 
   const toggleLeftPanel = () => setLeftPanelOpen(!leftPanelOpen)
-  const toggleRightPanel = () => setRightPanelOpen(!rightPanelOpen)
-  const toggleDesignSpacePanel = () => setDesignSpacePanelOpen(!designSpacePanelOpen)
 
   const addSlider = () => {
     const newSlider = {
@@ -41,23 +38,74 @@ function App() {
     setSliders(sliders.filter(slider => slider.id !== id))
   }
 
+  const handleDesignSpaceGenerated = (newSliders, trialId) => {
+    // Replace existing sliders with the new design space sliders
+    setSliders(newSliders)
+    setCurrentTrialId(trialId)
+    console.log('📊 Design space generated for trial:', trialId)
+    
+    // Debug: Log current trial
+    const trial = trialLogger.getTrial(trialId)
+    if (trial) {
+      console.log('📊 Current trial details:', trial)
+    }
+  }
+
+  const handleDesignCreated = (design) => {
+    // Add a unique ID to the design
+    const designWithId = {
+      ...design,
+      id: Date.now()
+    }
+    setDesignCards([...designCards, designWithId])
+
+    // Log the design to the current trial
+    if (currentTrialId) {
+      const designId = trialLogger.addDesignToTrial(currentTrialId, design)
+      console.log('📊 Added design to trial:', currentTrialId, 'Design ID:', designId)
+      
+      // Debug: Log updated trial
+      const trial = trialLogger.getTrial(currentTrialId)
+      if (trial) {
+        console.log('📊 Updated trial details:', trial)
+      }
+    } else {
+      console.warn('⚠️ No current trial ID available for design logging')
+    }
+  }
+
+  const handleRemoveDesignCard = (designId) => {
+    setDesignCards(designCards.filter(card => card.id !== designId))
+  }
+
+  const handleDesignUpdate = (updatedDesign) => {
+    // Update the design card with the new UI codes
+    setDesignCards(prevCards => 
+      prevCards.map(card => 
+        card.id === updatedDesign.id ? updatedDesign : card
+      )
+    )
+    
+    // Also update the design in the trial logger
+    if (currentTrialId) {
+      trialLogger.updateDesignInTrial(currentTrialId, updatedDesign.id, updatedDesign)
+      console.log('📊 Updated design in trial:', currentTrialId, 'Design ID:', updatedDesign.id)
+    }
+  }
+
   return (
     <div className="app">
-      <Canvas />
+      <Canvas 
+        designCards={designCards}
+        onRemoveDesignCard={handleRemoveDesignCard}
+        onDesignUpdate={handleDesignUpdate}
+        currentTrialId={currentTrialId}
+      />
       
-      <LeftPanel 
-        isOpen={leftPanelOpen} 
+      <LeftPanel
+        isOpen={leftPanelOpen}
         onToggle={toggleLeftPanel}
-      />
-      
-      <RightPanel 
-        isOpen={rightPanelOpen} 
-        onToggle={toggleRightPanel}
-      />
-      
-      <DesignSpacePanel
-        isOpen={designSpacePanelOpen}
-        onToggle={toggleDesignSpacePanel}
+        onDesignSpaceGenerated={handleDesignSpaceGenerated}
       />
       
       <FloatingSliders 
@@ -65,6 +113,8 @@ function App() {
         onUpdateSlider={updateSlider}
         onRemoveSlider={removeSlider}
         onAddSlider={addSlider}
+        onDesignCreated={handleDesignCreated}
+        currentTrialId={currentTrialId}
       />
     </div>
   )

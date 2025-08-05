@@ -1,12 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import { ZoomIn, ZoomOut, Move } from 'lucide-react'
+import { ZoomIn, ZoomOut, Move, X, Code, Eye, Loader2 } from 'lucide-react'
+import UIView from './UIView'
 import './Canvas.css'
 
-const Canvas = () => {
+const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentTrialId }) => {
   const [zoom, setZoom] = useState(1)
-  const [isDragging, setIsDragging] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
+  const [uiViewOpen, setUiViewOpen] = useState(false)
+  const [selectedDesign, setSelectedDesign] = useState(null)
+  const [generatingDesignId, setGeneratingDesignId] = useState(null)
   const canvasRef = useRef(null)
 
   const handleWheel = (e) => {
@@ -52,6 +57,111 @@ const Canvas = () => {
     setPosition({ x: 0, y: 0 })
   }
 
+  // Calculate center position for design cards
+  const getCenterPosition = () => {
+    const cardWidth = 300 // Width of design card
+    const cardHeight = 300 // Height of design card (now square)
+    const centerX = Math.max(0, (canvasSize.width - cardWidth) / 2)
+    const centerY = Math.max(0, (canvasSize.height - cardHeight) / 2)
+    return { x: centerX, y: centerY }
+  }
+
+  const handleGenerateUICode = async (design) => {
+    console.log('🎨 Starting UI code generation for design:', design)
+    
+    // Check if design has screens
+    const screensToUse = design.screens || []
+    if (!screensToUse || screensToUse.length === 0) {
+      alert('No screens available for UI code generation')
+      return
+    }
+
+    // Set loading state
+    setGeneratingDesignId(design.id)
+
+    try {
+      // Import the generation service
+      const { genUICodesStreaming } = await import('../services/generationService')
+      
+      // Generate UI codes
+      const screenDescriptions = screensToUse.map(screen => {
+        if (typeof screen === 'string') {
+          return { screen_specification: screen }
+        }
+        return screen
+      })
+      
+      const generatedUICodes = await genUICodesStreaming({
+        screenDescriptions: screenDescriptions,
+        critiques: [],
+        onProgress: (codes, index) => {
+          console.log(`📝 Progress: Screen ${index + 1} code generated`)
+        }
+      })
+
+      console.log('✅ UI code generation completed:', generatedUICodes)
+      
+      // Update the design object with the generated UI codes
+      if (generatedUICodes && generatedUICodes.length > 0) {
+        const updatedDesign = {
+          ...design,
+          screens: screensToUse.map((screen, index) => ({
+            ...screen,
+            ui_code: generatedUICodes[index] || ''
+          }))
+        }
+        
+        console.log('🎨 Updated design with UI codes:', updatedDesign)
+        
+        // Update the design in the parent component
+        if (onDesignUpdate) {
+          onDesignUpdate(updatedDesign)
+        }
+        
+        // Open the UIView with the updated design
+        setSelectedDesign(updatedDesign)
+        setUiViewOpen(true)
+      } else {
+        throw new Error('No UI codes were generated')
+      }
+    } catch (error) {
+      console.error('❌ Error generating UI codes:', error)
+      alert(`Failed to generate UI codes: ${error.message}`)
+    } finally {
+      // Clear loading state
+      setGeneratingDesignId(null)
+    }
+  }
+
+  const handleOpenUIView = (design) => {
+    setSelectedDesign(design)
+    setUiViewOpen(true)
+  }
+
+  const handleCloseUIView = () => {
+    setUiViewOpen(false)
+    setSelectedDesign(null)
+  }
+
+  // Update canvas size when component mounts or window resizes
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (canvasRef.current) {
+        setCanvasSize({
+          width: canvasRef.current.offsetWidth,
+          height: canvasRef.current.offsetHeight
+        })
+      }
+    }
+
+    updateCanvasSize()
+    window.addEventListener('resize', updateCanvasSize)
+
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize)
+    }
+  }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (canvas) {
@@ -93,15 +203,94 @@ const Canvas = () => {
           </svg>
         </div>
         
-        {/* Sample content */}
+        {/* Design Cards */}
         <div className="canvas-content">
-          <div className="sample-rectangle" style={{ left: '100px', top: '100px' }}>
+          {designCards.map((design, index) => {
+            const centerPos = getCenterPosition()
+            // Add slight offset for multiple cards to avoid overlap
+            const offsetX = index * 20
+            const offsetY = index * 20
+            
+            return (
+              <div 
+                key={design.id || index}
+                className="design-card"
+                style={{ 
+                  left: `${centerPos.x + offsetX}px`, 
+                  top: `${centerPos.y + offsetY}px` 
+                }}
+              >
+                <div className="design-card-header">
+                  <h3 className="design-card-title">
+                    {design.design_name || design.name || `Design ${index + 1}`}
+                  </h3>
+                  <div className="design-card-actions">
+                    <button 
+                      className="design-card-action-btn view-btn"
+                      onClick={() => handleOpenUIView(design)}
+                      title="View UI"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <button 
+                      className="design-card-action-btn ui-code-btn"
+                      onClick={() => handleGenerateUICode(design)}
+                      title="Generate UI Code"
+                      disabled={generatingDesignId === design.id}
+                    >
+                      {generatingDesignId === design.id ? (
+                        <Loader2 size={14} className="loading-spinner" />
+                      ) : (
+                        <Code size={14} />
+                      )}
+                    </button>
+                    {onRemoveDesignCard && (
+                      <button 
+                        className="design-card-remove"
+                        onClick={() => onRemoveDesignCard(design.id || index)}
+                        title="Remove design"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="design-card-content">
+                  <p className="design-card-description">
+                    {design.core_concept || design.description || 'No description available'}
+                  </p>
+                  {design.key_characteristics && (
+                    <div className="design-card-characteristics">
+                      <h4>Key Characteristics:</h4>
+                      <ul>
+                        {Array.isArray(design.key_characteristics) 
+                          ? design.key_characteristics.map((char, i) => (
+                              <li key={i}>{char}</li>
+                            ))
+                          : <li>{design.key_characteristics}</li>
+                        }
+                      </ul>
+                    </div>
+                  )}
+                  {design.rationale && (
+                    <div className="design-card-rationale">
+                      <h4>Rationale:</h4>
+                      <p>{design.rationale}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+          
+          {/* Sample content */}
+          <div className="sample-rectangle" style={{ left: '100px', top: '300px' }}>
             <div className="rectangle-label">Rectangle 1</div>
           </div>
-          <div className="sample-circle" style={{ left: '300px', top: '200px' }}>
+          <div className="sample-circle" style={{ left: '300px', top: '400px' }}>
             <div className="circle-label">Circle 1</div>
           </div>
-          <div className="sample-text" style={{ left: '200px', top: '400px' }}>
+          <div className="sample-text" style={{ left: '200px', top: '600px' }}>
             Sample Text Element
           </div>
         </div>
@@ -120,6 +309,17 @@ const Canvas = () => {
         </button>
         <div className="zoom-level">{Math.round(zoom * 100)}%</div>
       </div>
+
+      {/* UIView - UI Code Generation */}
+      {uiViewOpen && selectedDesign && (
+        <UIView
+          isOpen={uiViewOpen}
+          design={selectedDesign}
+          screens={selectedDesign.screens || []}
+          onClose={handleCloseUIView}
+          currentTrialId={currentTrialId}
+        />
+      )}
     </div>
   )
 }

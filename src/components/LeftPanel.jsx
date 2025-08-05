@@ -1,21 +1,47 @@
-import { useState } from 'react'
-import { ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ChevronRight, ChevronLeft, X, Plus, Key, Save, Check, Send, Loader2 } from 'lucide-react'
+import { modelService, GEMINI_MODELS } from '../services/model'
+import { genDesignSpace } from '../services/generationService'
+import { setGeminiModels } from '../services/chains'
+import { trialLogger } from '../services/trialLogger'
 import './LeftPanel.css'
 
-const LeftPanel = ({ isOpen, onToggle }) => {
+const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
+  const [activeTab, setActiveTab] = useState('design-space')
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'rectangle',
-    width: 100,
-    height: 100,
-    color: '#3b82f6',
-    description: ''
+    context: 'As a parent of a toddler, I often struggle to think of what to do over the weekend with my child. I don\'t',
+    user: 'A busy parent who is often too busy during the week to plan weekend activities for their child',
+    goal: 'Have fun, engaging, and educational activities with my child over the weekend.',
+    tasks: ['Plan a weekend of activities for my child', 'Review activities in past weekends'],
+    examples: [],
+    comments: ''
   })
+  const [apiKey, setApiKey] = useState('')
+  const [isApiKeySet, setIsApiKeySet] = useState(false)
+  const [apiKeySaved, setApiKeySaved] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('modelFlash')
+  const [prompt, setPrompt] = useState('')
+  const [response, setResponse] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [isGeneratingDesignSpace, setIsGeneratingDesignSpace] = useState(false)
+  const [currentTrialId, setCurrentTrialId] = useState(null)
 
-  const [elements, setElements] = useState([
-    { id: 1, name: 'Rectangle 1', type: 'rectangle', width: 100, height: 100, color: '#3b82f6' },
-    { id: 2, name: 'Circle 1', type: 'circle', width: 80, height: 80, color: '#ef4444' }
-  ])
+  // Load API key from localStorage on component mount
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('VITE_GEMINI_API_KEY')
+    if (storedApiKey) {
+      setApiKey(storedApiKey)
+      setIsApiKeySet(true)
+      // Initialize the model service with the stored API key
+      try {
+        modelService.initialize(storedApiKey)
+        setGeminiModels(storedApiKey)
+      } catch (error) {
+        console.error('Failed to initialize model service:', error)
+      }
+    }
+  }, [])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -25,147 +51,483 @@ const LeftPanel = ({ isOpen, onToggle }) => {
     }))
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const newElement = {
-      id: Date.now(),
-      ...formData
-    }
-    setElements([...elements, newElement])
-    setFormData({
-      name: '',
-      type: 'rectangle',
-      width: 100,
-      height: 100,
-      color: '#3b82f6',
-      description: ''
-    })
+  const handleApiKeyChange = (e) => {
+    setApiKey(e.target.value)
+    setApiKeySaved(false)
   }
 
-  const handleDeleteElement = (id) => {
-    setElements(elements.filter(element => element.id !== id))
+  const handleApiKeySubmit = (e) => {
+    e.preventDefault()
+    if (apiKey.trim()) {
+      localStorage.setItem('VITE_GEMINI_API_KEY', apiKey.trim())
+      setIsApiKeySet(true)
+      setApiKeySaved(true)
+      // Initialize the model service with the new API key
+      try {
+        modelService.initialize(apiKey.trim())
+        setGeminiModels(apiKey.trim())
+        setError('')
+        // Show success message and reload the page after 1 second
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      } catch (error) {
+        setError('Failed to initialize model service: ' + error.message)
+      }
+      // Clear the saved message after 3 seconds (but page will reload before this)
+      setTimeout(() => setApiKeySaved(false), 3000)
+    }
+  }
+
+  const clearApiKey = () => {
+    localStorage.removeItem('VITE_GEMINI_API_KEY')
+    setApiKey('')
+    setIsApiKeySet(false)
+    setApiKeySaved(false)
+    modelService.clear()
+    setError('')
+    // Reload the page after clearing the API key
+    setTimeout(() => {
+      window.location.reload()
+    }, 500)
+  }
+
+  const handleModelSubmit = async (e) => {
+    e.preventDefault()
+    if (!prompt.trim()) return
+
+    setIsLoading(true)
+    setError('')
+    setResponse('')
+
+    try {
+      if (!modelService.isInitialized()) {
+        throw new Error('Model service not initialized. Please set your API key first.')
+      }
+
+      const result = await modelService.generateContent(selectedModel, prompt.trim())
+      setResponse(result.text)
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleStreamSubmit = async (e) => {
+    e.preventDefault()
+    if (!prompt.trim()) return
+
+    setIsLoading(true)
+    setError('')
+    setResponse('')
+
+    try {
+      if (!modelService.isInitialized()) {
+        throw new Error('Model service not initialized. Please set your API key first.')
+      }
+
+      await modelService.generateContentStream(
+        selectedModel,
+        prompt.trim(),
+        (chunk, fullText) => {
+          setResponse(fullText)
+        }
+      )
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const addTask = () => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: [...prev.tasks, '']
+    }))
+  }
+
+  const updateTask = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map((task, i) => i === index ? value : task)
+    }))
+  }
+
+  const removeTask = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addExample = () => {
+    setFormData(prev => ({
+      ...prev,
+      examples: [...prev.examples, '']
+    }))
+  }
+
+  const updateExample = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      examples: prev.examples.map((example, i) => i === index ? value : example)
+    }))
+  }
+
+  const removeExample = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      examples: prev.examples.filter((_, i) => i !== index)
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!isApiKeySet) {
+      setError('Please set your API key first.')
+      return
+    }
+
+    setIsGeneratingDesignSpace(true)
+    setError('')
+    setResponse('')
+
+    try {
+      if (!modelService.isInitialized()) {
+        throw new Error('Model service not initialized. Please set your API key first.')
+      }
+
+      // Create a new trial
+      const trialId = trialLogger.createTrial({
+        context: formData.context,
+        user: formData.user,
+        goal: formData.goal,
+        tasks: formData.tasks,
+        examples: formData.examples,
+        comments: formData.comments
+      })
+      setCurrentTrialId(trialId)
+      console.log('📊 Created new trial:', trialId)
+
+      const result = await genDesignSpace({
+        context: formData.context,
+        user: formData.user,
+        goal: formData.goal,
+        tasks: formData.tasks,
+        examples: formData.examples,
+        userComments: formData.comments
+      })
+
+      // Convert design space dimensions to sliders
+      if (result && result.designSpace && Array.isArray(result.designSpace)) {
+        // Update trial with design space
+        trialLogger.updateTrialDesignSpace(trialId, result.designSpace)
+        console.log('📊 Updated trial with design space:', trialId)
+
+        const newSliders = result.designSpace.map((dimension, index) => {
+          // Create a slider for each dimension
+          const options = dimension.options || []
+          const maxValue = Math.max(options.length - 1, 0)
+          
+          return {
+            id: Date.now() + index,
+            label: dimension.dimension_name || `Dimension ${index + 1}`,
+            value: 0, // Start at the first option
+            min: 0,
+            max: maxValue,
+            dimension: dimension,
+            options: options
+          }
+        })
+
+        // Call the parent component to update sliders
+        if (onDesignSpaceGenerated) {
+          onDesignSpaceGenerated(newSliders, trialId)
+        }
+
+        setResponse(`Generated ${newSliders.length} design space dimensions:\n${JSON.stringify(result.designSpace, null, 2)}`)
+      } else {
+        throw new Error('Invalid design space result')
+      }
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setIsGeneratingDesignSpace(false)
+    }
   }
 
   return (
-    <div className={`left-panel ${isOpen ? 'open' : ''}`}>
-      <button className="panel-toggle" onClick={onToggle}>
+    <>
+      <button className={`panel-toggle ${isOpen ? 'open' : ''}`} onClick={onToggle}>
         {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
       </button>
       
-      <div className="panel-content">
-        <h2>Elements</h2>
-        
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="element-form">
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Element name"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="type">Type</label>
-            <select
-              id="type"
-              name="type"
-              value={formData.type}
-              onChange={handleInputChange}
+      <div className={`left-panel ${isOpen ? 'open' : ''}`}>
+        <div className="panel-content">
+          <div className="tabs">
+            <button 
+              className={`tab ${activeTab === 'design-space' ? 'active' : ''}`} 
+              onClick={() => setActiveTab('design-space')}
             >
-              <option value="rectangle">Rectangle</option>
-              <option value="circle">Circle</option>
-              <option value="text">Text</option>
-              <option value="line">Line</option>
-            </select>
+              Design Space
+            </button>
+            <button 
+              className={`tab ${activeTab === 'gemini' ? 'active' : ''}`} 
+              onClick={() => setActiveTab('gemini')}
+            >
+              Gemini AI
+            </button>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="width">Width</label>
-              <input
-                type="number"
-                id="width"
-                name="width"
-                value={formData.width}
-                onChange={handleInputChange}
-                min="1"
-                max="1000"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="height">Height</label>
-              <input
-                type="number"
-                id="height"
-                name="height"
-                value={formData.height}
-                onChange={handleInputChange}
-                min="1"
-                max="1000"
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="color">Color</label>
-            <input
-              type="color"
-              id="color"
-              name="color"
-              value={formData.color}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Optional description"
-              rows="3"
-            />
-          </div>
-
-          <button type="submit" className="add-btn">
-            <Plus size={16} />
-            Add Element
-          </button>
-        </form>
-
-        {/* Elements list */}
-        <div className="elements-list">
-          <h3>Created Elements</h3>
-          {elements.map(element => (
-            <div key={element.id} className="element-item">
-              <div className="element-info">
-                <div className="element-preview" style={{ backgroundColor: element.color }}>
-                  {element.type === 'circle' && <div className="circle-preview"></div>}
+          {activeTab === 'design-space' && (
+            <>
+              <h2>Design Space</h2>
+              <form onSubmit={handleSubmit} className="design-space-form">
+                {/* Context Section */}
+                <div className="form-section">
+                  <label className="section-label">Context</label>
+                  <textarea
+                    name="context"
+                    value={formData.context}
+                    onChange={handleInputChange}
+                    className="form-textarea"
+                    rows="4"
+                  />
                 </div>
-                <div className="element-details">
-                  <div className="element-name">{element.name}</div>
-                  <div className="element-type">{element.type}</div>
+
+                {/* User Section */}
+                <div className="form-section">
+                  <label className="section-label">User</label>
+                  <textarea
+                    name="user"
+                    value={formData.user}
+                    onChange={handleInputChange}
+                    className="form-textarea"
+                    rows="3"
+                  />
                 </div>
+
+                {/* Goal Section */}
+                <div className="form-section">
+                  <label className="section-label">Goal</label>
+                  <textarea
+                    name="goal"
+                    value={formData.goal}
+                    onChange={handleInputChange}
+                    className="form-textarea"
+                    rows="2"
+                  />
+                </div>
+
+                {/* Tasks Section */}
+                <div className="form-section">
+                  <label className="section-label">Tasks</label>
+                  {formData.tasks.map((task, index) => (
+                    <div key={index} className="task-item">
+                      <input
+                        type="text"
+                        value={task}
+                        onChange={(e) => updateTask(index, e.target.value)}
+                        className="form-input"
+                        placeholder="Enter a task"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeTask(index)}
+                        className="remove-btn"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addTask} className="add-link">
+                    <Plus size={16} />
+                    Add task
+                  </button>
+                </div>
+
+                {/* Examples Section */}
+                <div className="form-section">
+                  <label className="section-label">Examples</label>
+                  {formData.examples.map((example, index) => (
+                    <div key={index} className="task-item">
+                      <input
+                        type="text"
+                        value={example}
+                        onChange={(e) => updateExample(index, e.target.value)}
+                        className="form-input"
+                        placeholder="Enter an example"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeExample(index)}
+                        className="remove-btn"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addExample} className="add-link">
+                    <Plus size={16} />
+                    Add example
+                  </button>
+                </div>
+
+                {/* Comments Section */}
+                <div className="form-section">
+                  <label className="section-label">Comments</label>
+                  <textarea
+                    name="comments"
+                    value={formData.comments}
+                    onChange={handleInputChange}
+                    className="form-textarea"
+                    placeholder="Enter comments..."
+                    rows="3"
+                  />
+                </div>
+
+                <button type="submit" className="create-btn" disabled={!isApiKeySet || isGeneratingDesignSpace}>
+                  {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+                  {isGeneratingDesignSpace ? 'Generating...' : 'Generate Design Space'}
+                </button>
+              </form>
+            </>
+          )}
+
+          {activeTab === 'gemini' && (
+            <>
+              <h2>Gemini AI</h2>
+              <div className="gemini-settings">
+                {/* API Key Section */}
+                <div className="form-section">
+                  <label className="section-label">
+                    <Key size={16} />
+                    API Key
+                  </label>
+                  <div className="api-key-section">
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={handleApiKeyChange}
+                      className="form-input"
+                      placeholder="Enter your Gemini API key"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApiKeySubmit}
+                      className="save-btn"
+                      disabled={!apiKey.trim()}
+                    >
+                      {apiKeySaved ? <Check size={16} /> : <Save size={16} />}
+                      {apiKeySaved ? 'Saved - Reloading...' : 'Save'}
+                    </button>
+                  </div>
+                  {isApiKeySet && (
+                    <div className="api-key-status">
+                      <span className="status-indicator success">✓ API Key is set</span>
+                      <button
+                        type="button"
+                        onClick={clearApiKey}
+                        className="clear-btn"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  <p className="help-text">
+                    Get your API key from the{' '}
+                    <a 
+                      href="https://makersuite.google.com/app/apikey" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="help-link"
+                    >
+                      Google AI Studio
+                    </a>
+                  </p>
+                </div>
+
+                {/* Model Selection */}
+                {isApiKeySet && (
+                  <div className="form-section">
+                    <label className="section-label">Model</label>
+                    <select
+                      value={selectedModel}
+                      onChange={(e) => setSelectedModel(e.target.value)}
+                      className="form-input"
+                    >
+                      {Object.keys(GEMINI_MODELS).map(modelKey => (
+                        <option key={modelKey} value={modelKey}>
+                          {GEMINI_MODELS[modelKey].displayName} - {GEMINI_MODELS[modelKey].description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Prompt Input */}
+                {isApiKeySet && (
+                  <div className="form-section">
+                    <label className="section-label">Prompt</label>
+                    <textarea
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      className="form-textarea"
+                      placeholder="Enter your prompt..."
+                      rows="4"
+                    />
+                    <div className="submit-buttons">
+                      <button
+                        type="button"
+                        onClick={handleModelSubmit}
+                        className="submit-btn"
+                        disabled={!prompt.trim() || isLoading}
+                      >
+                        {isLoading ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+                        {isLoading ? 'Generating...' : 'Generate'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleStreamSubmit}
+                        className="submit-btn secondary"
+                        disabled={!prompt.trim() || isLoading}
+                      >
+                        {isLoading ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+                        {isLoading ? 'Streaming...' : 'Stream'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Display */}
+                {error && (
+                  <div className="error-message">
+                    {error}
+                  </div>
+                )}
+
+                {/* Response Display */}
+                {response && (
+                  <div className="form-section">
+                    <label className="section-label">Response</label>
+                    <div className="response-section">
+                      <textarea
+                        value={response}
+                        readOnly
+                        className="form-textarea"
+                        rows="8"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={() => handleDeleteElement(element.id)}
-                className="delete-btn"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
