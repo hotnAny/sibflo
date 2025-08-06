@@ -1,60 +1,42 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Code, ArrowLeft, ArrowRight } from 'lucide-react'
+import { trialLogger } from '../services/trialLogger'
 import './UIView.css'
 
 const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
-  const [generatedCodes, setGeneratedCodes] = useState([])
+  const [generatedCodes, setGeneratedCodes] = useState({})
   const [selectedTask, setSelectedTask] = useState(null)
   const [selectedScreen, setSelectedScreen] = useState(null)
 
+  // Create a unique key for this design to scope the generatedCodes
+  const designKey = useMemo(() => {
+    // Use the design object's existing ID directly
+    return design?.id || 'default'
+  }, [design?.id])
+
   useEffect(() => {
     if (isOpen && design) {
-      // Retrieve existing UI codes from the design object
-      retrieveExistingUICodes()
+      // Retrieve all data from the design object and trial logger
+      setGeneratedCodes(design.screens.map(screen => screen.ui_code))
     }
-  }, [isOpen, design])
+  }, [isOpen, design, designKey, currentTrialId])
 
   useEffect(() => {
     console.log('🎯 selectedTask changed:', selectedTask)
   }, [selectedTask])
 
-  const retrieveExistingUICodes = () => {
-    if (!design) {
-      console.warn('⚠️ No design available for UI code retrieval')
-      setGeneratedCodes([])
-      return
-    }
-
-    console.log('🎨 Retrieving existing UI codes from design:', design)
+  // Get the current design's generated codes
+  const getCurrentDesignCodes = () => {
+    // Get codes from local state (populated by retrieveDesignData)
+    const localCodes = generatedCodes[designKey] || []
     
-    // Use screens from design.screens if available, otherwise use the screens prop
-    const screensToUse = design.screens || screens
-    
-    if (!screensToUse || screensToUse.length === 0) {
-      console.warn('⚠️ No screens available for UI code retrieval')
-      setGeneratedCodes([])
-      return
-    }
-    
-    // Extract UI codes from the screens array
-    const existingCodes = screensToUse.map((screen, index) => {
-      // Check if the screen has ui_code property
-      if (screen.ui_code) {
-        console.log(`📝 Found existing UI code for screen ${index}:`, {
-          title: screen.screen_specification || screen.title || 'Unknown screen',
-          ui_code_snippet: screen.ui_code.substring(0, 100) + '...',
-          screen_id: screen.screen_id || screen.id
-        })
-        return screen.ui_code
-      }
-      // If no ui_code, return empty string
-      console.log(`⚠️ No UI code found for screen ${index}:`, screen.screen_specification || screen.title || 'Unknown screen')
-      return ''
+    console.log('📊 getCurrentDesignCodes - returning codes from local state:', {
+      designKey,
+      codesCount: localCodes.length,
+      hasCodes: localCodes.some(code => code)
     })
-
-    console.log('✅ Retrieved existing UI codes (count):', existingCodes.length)
-    console.log('✅ UI codes snippets:', existingCodes.map((code, i) => `${i}: ${code ? code.substring(0, 50) + '...' : 'N/A'}`))
-    setGeneratedCodes(existingCodes)
+    
+    return localCodes
   }
 
   const getScreenTitle = (index) => {
@@ -101,25 +83,26 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
   }
 
   const getFilteredScreens = () => {
-    // Use screens from design.screens if available, otherwise use the screens prop
+    // Use data from design object (populated by retrieveDesignData)
     const screensToUse = design?.screens || screens
+    const taskScreenMapping = design?.taskScreenMapping
     
     console.log('🔍 getFilteredScreens called with:', {
       selectedTask,
-      hasTaskScreenMapping: !!design?.taskScreenMapping,
-      taskScreenMapping: design?.taskScreenMapping,
+      hasTaskScreenMapping: !!taskScreenMapping,
+      taskScreenMapping: taskScreenMapping,
       screensToUseLength: screensToUse.length
     })
     
     // If no task is selected, return deduplicated screens
-    if (selectedTask == null || !design?.taskScreenMapping) {
+    if (selectedTask == null || !taskScreenMapping) {
       console.log('📋 No task selected, showing deduplicated screens')
       return deduplicateScreens(screensToUse)
     }
 
     // Use the numeric index to access taskScreenMapping
-    const taskScreens = design.taskScreenMapping[selectedTask]?.screens
-    console.log('🔍 Task filtering:', { selectedTask, taskScreens, taskScreenMapping: design.taskScreenMapping })
+    const taskScreens = taskScreenMapping[selectedTask]?.screens
+    console.log('🔍 Task filtering:', { selectedTask, taskScreens, taskScreenMapping: taskScreenMapping })
     
     if (!taskScreens) {
       console.log('⚠️ No screens found for task:', selectedTask)
@@ -177,16 +160,23 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
 
   // Get the current task's screens for navigation
   const getCurrentTaskScreens = () => {
-    if (selectedTask == null || !design?.taskScreenMapping) {
+    if (selectedTask == null) {
+      return []
+    }
+    
+    // Use data from design object (populated by retrieveDesignData)
+    const taskScreenMapping = design?.taskScreenMapping
+    const screensToUse = design?.screens || screens
+    
+    if (!taskScreenMapping) {
       return []
     }
 
-    const taskScreens = design.taskScreenMapping[selectedTask]?.screens
+    const taskScreens = taskScreenMapping[selectedTask]?.screens
     if (!taskScreens || !Array.isArray(taskScreens)) {
       return []
     }
 
-    const screensToUse = design?.screens || screens
     return taskScreens.map((taskScreen, index) => {
       const screenId = taskScreen.screen_id
       if (screenId == undefined) return null
@@ -195,7 +185,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
       if (!screen) return null
       
       // Get the UI code from the screen object or from generatedCodes
-      const uiCode = screen.ui_code || generatedCodes[screenId] || ''
+      const uiCode = screen.ui_code || getCurrentDesignCodes()[screenId] || ''
       
       return {
         ...screen,
@@ -366,14 +356,14 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     const { screen, index } = selectedScreen
     
     // Get the UI code from the screen object first, then fall back to generatedCodes
-    const screenCode = screen.ui_code || generatedCodes[index] || ''
+    const screenCode = screen.ui_code || getCurrentDesignCodes()[index] || ''
     
     // Debug logging
     console.log('🎨 Full-screen view - Screen:', {
       screenId: screen.screen_id || screen.id,
       screenTitle: screen.title || screen.screen_specification,
       hasUiCode: !!screen.ui_code,
-      hasGeneratedCode: !!generatedCodes[index],
+      hasGeneratedCode: !!getCurrentDesignCodes()[index],
       screenCodeLength: screenCode.length
     })
     
@@ -475,29 +465,34 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
           <div className="ui-view-sidebar">
             <h3>Tasks</h3>
             <div className="task-list">
-              {design?.taskScreenMapping ? (
-                Object.entries(design.taskScreenMapping).map(([taskKey, screenMapping], index) => {
-                  console.log('🎯 Rendering task:', taskKey, 'with mapping:', screenMapping)
-                  
-                  // Get tasks from the current trial
-                  const tasksFromTrial = getTasksFromTrial()
-                  
-                  // Get the task description for this index
-                  const taskDescription = tasksFromTrial[index] || getTaskDescription(index)
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className={`task-item ${selectedTask === index ? 'task-item-selected' : ''}`}
-                      onClick={() => handleTaskClick(index)}
-                    >
-                      {taskDescription}
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="task-item">Plan a weekend of activities for my child</div>
-              )}
+              {(() => {
+                // Use data from design object (populated by retrieveDesignData)
+                const taskScreenMapping = design?.taskScreenMapping
+                
+                if (taskScreenMapping) {
+                  return Object.entries(taskScreenMapping).map(([taskKey, screenMapping], index) => {
+                    console.log('🎯 Rendering task:', taskKey, 'with mapping:', screenMapping)
+                    
+                    // Get tasks from the current trial
+                    const tasksFromTrial = getTasksFromTrial()
+                    
+                    // Get the task description for this index
+                    const taskDescription = tasksFromTrial[index] || getTaskDescription(index)
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`task-item ${selectedTask === index ? 'task-item-selected' : ''}`}
+                        onClick={() => handleTaskClick(index)}
+                      >
+                        {taskDescription}
+                      </div>
+                    )
+                  })
+                } else {
+                  return <div className="task-item">Plan a weekend of activities for my child</div>
+                }
+              })()}
             </div>
           </div>
 
@@ -529,7 +524,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                                       `Screen ${filteredIndex + 1}`
                     
                     // Get the UI code directly from the screen object
-                    const screenUICode = screen.ui_code || generatedCodes[originalIndex] || ''
+                    const screenUICode = screen.ui_code || getCurrentDesignCodes()[originalIndex] || ''
                     
                     console.log(`🎨 Rendering screen: ${screenTitle} (ID: ${screen.screen_id || screen.id}), UI Code snippet:`, screenUICode ? screenUICode.substring(0, 50) + '...' : 'N/A')
                     
@@ -588,4 +583,4 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
   )
 }
 
-export default UIView 
+export default UIView

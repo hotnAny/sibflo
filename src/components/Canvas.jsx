@@ -66,6 +66,22 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     return { x: centerX, y: centerY }
   }
 
+  // Calculate position for design cards - place each card to the right of the previous
+  const getDesignCardPosition = (index, totalCards) => {
+    const centerPos = getCenterPosition()
+    const cardWidth = 300 // Width of design card
+    const cardSpacing = 50 // Spacing between cards
+    
+    console.log('🎨 getDesignCardPosition called:', { index, totalCards })
+    
+    // Simple linear progression: each card to the right of the previous
+    const x = centerPos.x + (index * (cardWidth + cardSpacing))
+    const y = centerPos.y + (index * 20) // Small vertical offset to avoid perfect alignment
+    
+    console.log('🎨 Positioning card', index, ':', { x, y })
+    return { x, y }
+  }
+
   const handleGenerateUICode = async (design) => {
     console.log('🎨 Starting UI code generation for design:', design)
     
@@ -111,10 +127,18 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
           }))
         }
         
-        console.log('🎨 Updated design with UI codes:', updatedDesign)
+        console.log('🎨 Updated design with UI codes:', {
+          designId: updatedDesign.id,
+          screensCount: updatedDesign.screens?.length || 0,
+          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0,
+          uiCodesSnippets: updatedDesign.screens?.map(screen => 
+            screen.ui_code ? screen.ui_code.substring(0, 50) + '...' : 'N/A'
+          ) || []
+        })
         
         // Update the design in the parent component
         if (onDesignUpdate) {
+          console.log('📊 Calling onDesignUpdate with updated design')
           onDesignUpdate(updatedDesign)
         }
         
@@ -134,6 +158,12 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   }
 
   const handleOpenUIView = (design) => {
+    console.log('🎯 Opening UI view for design:', {
+      id: design.id,
+      name: design.design_name || design.name,
+      screensCount: design.screens?.length || 0,
+      hasTaskScreenMapping: !!design.taskScreenMapping
+    })
     setSelectedDesign(design)
     setUiViewOpen(true)
   }
@@ -206,18 +236,15 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
         {/* Design Cards */}
         <div className="canvas-content">
           {designCards.map((design, index) => {
-            const centerPos = getCenterPosition()
-            // Add slight offset for multiple cards to avoid overlap
-            const offsetX = index * 20
-            const offsetY = index * 20
+            const position = getDesignCardPosition(index, designCards.length)
             
             return (
               <div 
                 key={design.id || index}
                 className="design-card"
                 style={{ 
-                  left: `${centerPos.x + offsetX}px`, 
-                  top: `${centerPos.y + offsetY}px` 
+                  left: `${position.x}px`, 
+                  top: `${position.y}px` 
                 }}
               >
                 <div className="design-card-header">
@@ -313,6 +340,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
       {/* UIView - UI Code Generation */}
       {uiViewOpen && selectedDesign && (
         <UIView
+          key={selectedDesign.id || selectedDesign.design_name || 'default'}  // ← Force re-initialization
           isOpen={uiViewOpen}
           design={selectedDesign}
           screens={selectedDesign.screens || []}

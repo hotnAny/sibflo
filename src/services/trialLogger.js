@@ -139,14 +139,40 @@ export class TrialLogger {
     if (trial) {
       const designIndex = trial.designs.findIndex(d => d.id === designId)
       if (designIndex !== -1) {
+        // Log the update details
+        console.log('📊 Updating design in trial:', {
+          trialId,
+          designId,
+          hasScreens: !!updatedDesign.screens,
+          screensCount: updatedDesign.screens?.length || 0,
+          hasUICodes: updatedDesign.screens?.some(screen => screen.ui_code) || false,
+          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0
+        })
+        
         trial.designs[designIndex] = {
           ...trial.designs[designIndex],
           ...updatedDesign
         }
+        
+        // Log the updated design structure
+        const updatedDesignInTrial = trial.designs[designIndex]
+        console.log('📊 Design updated in trial:', {
+          designId: updatedDesignInTrial.id,
+          screensCount: updatedDesignInTrial.screens?.length || 0,
+          uiCodesCount: updatedDesignInTrial.screens?.filter(screen => screen.ui_code).length || 0,
+          uiCodesSnippets: updatedDesignInTrial.screens?.map(screen => 
+            screen.ui_code ? screen.ui_code.substring(0, 50) + '...' : 'N/A'
+          ) || []
+        })
+        
         this.saveTrials()
         console.log('📊 Updated design in trial:', trialId, 'Design ID:', designId)
         return true
+      } else {
+        console.warn('⚠️ Design not found in trial:', { trialId, designId })
       }
+    } else {
+      console.warn('⚠️ Trial not found:', trialId)
     }
     return false
   }

@@ -52,16 +52,10 @@ function App() {
   }
 
   const handleDesignCreated = (design) => {
-    // Add a unique ID to the design
-    const designWithId = {
-      ...design,
-      id: Date.now()
-    }
-    setDesignCards([...designCards, designWithId])
-
-    // Log the design to the current trial
+    // Log the design to the current trial first to get the design ID
+    let designId = null
     if (currentTrialId) {
-      const designId = trialLogger.addDesignToTrial(currentTrialId, design)
+      designId = trialLogger.addDesignToTrial(currentTrialId, design)
       console.log('📊 Added design to trial:', currentTrialId, 'Design ID:', designId)
       
       // Debug: Log updated trial
@@ -72,6 +66,13 @@ function App() {
     } else {
       console.warn('⚠️ No current trial ID available for design logging')
     }
+
+    // Add the design to the design cards with the ID from trial logger
+    const designWithId = {
+      ...design,
+      id: designId || Date.now() // Use trial logger ID if available, otherwise fallback
+    }
+    setDesignCards([...designCards, designWithId])
   }
 
   const handleRemoveDesignCard = (designId) => {
@@ -79,6 +80,14 @@ function App() {
   }
 
   const handleDesignUpdate = (updatedDesign) => {
+    console.log('📊 handleDesignUpdate called with:', {
+      designId: updatedDesign.id,
+      hasScreens: !!updatedDesign.screens,
+      screensCount: updatedDesign.screens?.length || 0,
+      hasUICodes: updatedDesign.screens?.some(screen => screen.ui_code) || false,
+      uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0
+    })
+    
     // Update the design card with the new UI codes
     setDesignCards(prevCards => 
       prevCards.map(card => 
@@ -88,8 +97,14 @@ function App() {
     
     // Also update the design in the trial logger
     if (currentTrialId) {
-      trialLogger.updateDesignInTrial(currentTrialId, updatedDesign.id, updatedDesign)
-      console.log('📊 Updated design in trial:', currentTrialId, 'Design ID:', updatedDesign.id)
+      const success = trialLogger.updateDesignInTrial(currentTrialId, updatedDesign.id, updatedDesign)
+      if (success) {
+        console.log('📊 Successfully updated design in trial:', currentTrialId, 'Design ID:', updatedDesign.id)
+      } else {
+        console.error('❌ Failed to update design in trial:', currentTrialId, 'Design ID:', updatedDesign.id)
+      }
+    } else {
+      console.warn('⚠️ No current trial ID available for design update')
     }
   }
 
