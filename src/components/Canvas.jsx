@@ -343,7 +343,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
           key={selectedDesign.id || selectedDesign.design_name || 'default'}  // ← Force re-initialization
           isOpen={uiViewOpen}
           design={selectedDesign}
-          screens={selectedDesign.screens || []}
+          // screens={selectedDesign.screens || []}
           onClose={handleCloseUIView}
           currentTrialId={currentTrialId}
         />

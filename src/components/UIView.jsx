@@ -4,40 +4,41 @@ import { trialLogger } from '../services/trialLogger'
 import './UIView.css'
 
 const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
-  const [generatedCodes, setGeneratedCodes] = useState({})
+  // const [generatedCodes, setGeneratedCodes] = useState({})
   const [selectedTask, setSelectedTask] = useState(null)
   const [selectedScreen, setSelectedScreen] = useState(null)
+  const [selectedDesign, setSelectedDesign] = useState(null)
 
   // Create a unique key for this design to scope the generatedCodes
-  const designKey = useMemo(() => {
-    // Use the design object's existing ID directly
-    return design?.id || 'default'
-  }, [design?.id])
+  // const designKey = useMemo(() => {
+  //   // Use the design object's existing ID directly
+  //   return design?.id || 'default'
+  // }, [design?.id])
 
   useEffect(() => {
     if (isOpen && design) {
       // Retrieve all data from the design object and trial logger
-      setGeneratedCodes(design.screens.map(screen => screen.ui_code))
+      setSelectedDesign(design)
     }
-  }, [isOpen, design, designKey, currentTrialId])
+  }, [isOpen, design, currentTrialId])
 
-  useEffect(() => {
-    console.log('🎯 selectedTask changed:', selectedTask)
-  }, [selectedTask])
+  // useEffect(() => {
+  //   console.log('🎯 selectedTask changed:', selectedTask)
+  // }, [selectedTask])
 
   // Get the current design's generated codes
-  const getCurrentDesignCodes = () => {
-    // Get codes from local state (populated by retrieveDesignData)
-    const localCodes = generatedCodes[designKey] || []
+  // const getCurrentDesignCodes = () => {
+  //   // Get codes from local state (populated by retrieveDesignData)
+  //   const localCodes = generatedCodes[designKey] || []
     
-    console.log('📊 getCurrentDesignCodes - returning codes from local state:', {
-      designKey,
-      codesCount: localCodes.length,
-      hasCodes: localCodes.some(code => code)
-    })
+  //   console.log('📊 getCurrentDesignCodes - returning codes from local state:', {
+  //     designKey,
+  //     codesCount: localCodes.length,
+  //     hasCodes: localCodes.some(code => code)
+  //   })
     
-    return localCodes
-  }
+  //   return localCodes
+  // }
 
   const getScreenTitle = (index) => {
     // Use screens from design.screens if available, otherwise use the screens prop
@@ -83,26 +84,28 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
   }
 
   const getFilteredScreens = () => {
-    // Use data from design object (populated by retrieveDesignData)
-    const screensToUse = design?.screens || screens
-    const taskScreenMapping = design?.taskScreenMapping
+    if (!selectedDesign) return []
     
-    console.log('🔍 getFilteredScreens called with:', {
-      selectedTask,
-      hasTaskScreenMapping: !!taskScreenMapping,
-      taskScreenMapping: taskScreenMapping,
-      screensToUseLength: screensToUse.length
-    })
+    // Use data from design object (populated by retrieveDesignData)
+    const screensToUse = selectedDesign.screens
+    const taskScreenMapping = selectedDesign.taskScreenMapping
+    
+    // console.log('🔍 getFilteredScreens called with:', {
+    //   selectedTask,
+    //   hasTaskScreenMapping: !!taskScreenMapping,
+    //   taskScreenMapping: taskScreenMapping,
+    //   screensToUseLength: screensToUse.length
+    // })
     
     // If no task is selected, return deduplicated screens
-    if (selectedTask == null || !taskScreenMapping) {
-      console.log('📋 No task selected, showing deduplicated screens')
-      return deduplicateScreens(screensToUse)
+    if (selectedTask == null) {
+      // console.log('📋 No task selected, showing deduplicated screens')
+      return screensToUse
     }
 
     // Use the numeric index to access taskScreenMapping
     const taskScreens = taskScreenMapping[selectedTask]?.screens
-    console.log('🔍 Task filtering:', { selectedTask, taskScreens, taskScreenMapping: taskScreenMapping })
+    // console.log('🔍 Task filtering:', { selectedTask, taskScreens, taskScreenMapping: taskScreenMapping })
     
     if (!taskScreens) {
       console.log('⚠️ No screens found for task:', selectedTask)
@@ -134,25 +137,25 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
         }
       }).filter(Boolean)
       
-      console.log('📋 Filtered screens (array of objects):', filteredScreens)
+      // console.log('📋 Filtered screens (array of objects):', filteredScreens)
       return filteredScreens
     }
 
     // If taskScreens is a single object with screen_id and interaction
-    if (typeof taskScreens === 'object' && taskScreens !== null) {
-      const screenId = taskScreens.screen_id || taskScreens.id
-      if (screenId) {
-        const screen = screensToUse.find(s => s.screen_id === screenId || s.id === screenId)
-        if (screen) {
-          const filteredScreens = [{
-            ...screen,
-            interaction: taskScreens.interaction
-          }]
-          console.log('📋 Filtered screens (single object):', filteredScreens)
-          return filteredScreens
-        }
-      }
-    }
+    // if (typeof taskScreens === 'object' && taskScreens !== null) {
+    //   const screenId = taskScreens.screen_id || taskScreens.id
+    //   if (screenId) {
+    //     const screen = screensToUse.find(s => s.screen_id === screenId || s.id === screenId)
+    //     if (screen) {
+    //       const filteredScreens = [{
+    //         ...screen,
+    //         interaction: taskScreens.interaction
+    //       }]
+    //       console.log('📋 Filtered screens (single object):', filteredScreens)
+    //       return filteredScreens
+    //     }
+    //   }
+    // }
 
     console.log('⚠️ Unknown taskScreens format:', typeof taskScreens, taskScreens)
     return []
@@ -165,8 +168,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     }
     
     // Use data from design object (populated by retrieveDesignData)
-    const taskScreenMapping = design?.taskScreenMapping
-    const screensToUse = design?.screens || screens
+    const taskScreenMapping = selectedDesign?.taskScreenMapping
+    const screensToUse = selectedDesign?.screens
     
     if (!taskScreenMapping) {
       return []
@@ -185,7 +188,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
       if (!screen) return null
       
       // Get the UI code from the screen object or from generatedCodes
-      const uiCode = screen.ui_code || getCurrentDesignCodes()[screenId] || ''
+      const uiCode = screen.ui_code || ''
       
       return {
         ...screen,
@@ -356,16 +359,16 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     const { screen, index } = selectedScreen
     
     // Get the UI code from the screen object first, then fall back to generatedCodes
-    const screenCode = screen.ui_code || getCurrentDesignCodes()[index] || ''
+    const screenCode = screen.ui_code || ''
     
     // Debug logging
-    console.log('🎨 Full-screen view - Screen:', {
-      screenId: screen.screen_id || screen.id,
-      screenTitle: screen.title || screen.screen_specification,
-      hasUiCode: !!screen.ui_code,
-      hasGeneratedCode: !!getCurrentDesignCodes()[index],
-      screenCodeLength: screenCode.length
-    })
+    // console.log('🎨 Full-screen view - Screen:', {
+    //   screenId: screen.screen_id || screen.id,
+    //   screenTitle: screen.title || screen.screen_specification,
+    //   hasUiCode: !!screen.ui_code,
+    //   hasGeneratedCode: !!getCurrentDesignCodes()[index],
+    //   screenCodeLength: screenCode.length
+    // })
     
     // Get current task screens and calculate navigation state
     const currentTaskScreens = getCurrentTaskScreens()
@@ -524,7 +527,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                                       `Screen ${filteredIndex + 1}`
                     
                     // Get the UI code directly from the screen object
-                    const screenUICode = screen.ui_code || getCurrentDesignCodes()[originalIndex] || ''
+                    const screenUICode = screen.ui_code || ''
                     
                     console.log(`🎨 Rendering screen: ${screenTitle} (ID: ${screen.screen_id || screen.id}), UI Code snippet:`, screenUICode ? screenUICode.substring(0, 50) + '...' : 'N/A')
                     

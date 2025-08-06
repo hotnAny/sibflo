@@ -203,9 +203,10 @@ export async function genUICodes({ screenDescriptions, critiques = [] }) {
 // New streaming version that updates UI as each screen completes
 export async function genUICodesStreaming({ screenDescriptions, critiques = [], onProgress = null }) {
   const startTime = Date.now();
-  if (_uiCodes.length > 0 && critiques.length === 0) {
-    return _uiCodes;
-  }
+  
+  // if (_uiCodes.length > 0 && critiques.length === 0) {
+    // return _uiCodes;
+  // }
   
   try {
     // Initialize empty array for streaming updates
