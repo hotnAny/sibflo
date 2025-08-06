@@ -145,60 +145,60 @@ export function updateScreenDescriptions(screenDescriptions) {
 }
 
 // Update the UI codes if needed
-export async function genUICodes({ screenDescriptions, critiques = [] }) {
-  const startTime = Date.now();
-  if (_uiCodes.length > 0 && critiques.length === 0) {
-    return _uiCodes;
-  }
+// export async function genUICodes({ screenDescriptions, critiques = [] }) {
+//   const startTime = Date.now();
+//   if (_uiCodes.length > 0 && critiques.length === 0) {
+//     return _uiCodes;
+//   }
   
-  // TODO: modify the prompt to take in the critiques
-  const input = { screenDescriptions };
-  console.log('🔗 Service: genUICodes - RAW INPUT:', input);
+//   // TODO: modify the prompt to take in the critiques
+//   const input = { screenDescriptions };
+//   console.log('🔗 Service: genUICodes - RAW INPUT:', input);
 
-  const response = await uiCodeChain.invoke(input);
+//   const response = await uiCodeChain.invoke(input);
 
-  // The uiCodeChain returns an array of objects with {screenIndex, code}
-  // We need to extract just the code strings and sort them by screenIndex
-  if (Array.isArray(response)) {
-    // Sort by screenIndex to ensure correct order
-    const sortedCodes = response
-      .sort((a, b) => a.screenIndex - b.screenIndex)
-      .map(item => item.code);
-    _uiCodes = sortedCodes;
-  } else {
-    // If it's not an array, try to parse it as JSON
-    try {
-      const parsed = JSON.parse(response);
-      if (Array.isArray(parsed)) {
-        const sortedCodes = parsed
-          .sort((a, b) => a.screenIndex - b.screenIndex)
-          .map(item => item.code);
-        _uiCodes = sortedCodes;
-      } else {
-        _uiCodes = [response]; // Fallback to treating as single string
-      }
-    } catch {
-      _uiCodes = [response]; // Fallback to treating as single string
-    }
-  }
+//   // The uiCodeChain returns an array of objects with {screenIndex, code}
+//   // We need to extract just the code strings and sort them by screenIndex
+//   if (Array.isArray(response)) {
+//     // Sort by screenIndex to ensure correct order
+//     const sortedCodes = response
+//       .sort((a, b) => a.screenIndex - b.screenIndex)
+//       .map(item => item.code);
+//     _uiCodes = sortedCodes;
+//   } else {
+//     // If it's not an array, try to parse it as JSON
+//     try {
+//       const parsed = JSON.parse(response);
+//       if (Array.isArray(parsed)) {
+//         const sortedCodes = parsed
+//           .sort((a, b) => a.screenIndex - b.screenIndex)
+//           .map(item => item.code);
+//         _uiCodes = sortedCodes;
+//       } else {
+//         _uiCodes = [response]; // Fallback to treating as single string
+//       }
+//     } catch {
+//       _uiCodes = [response]; // Fallback to treating as single string
+//     }
+//   }
 
-  const endTime = Date.now();
-  const duration = endTime - startTime;
-  // console.log(`🎨 Service: Generated UI codes in ${duration}ms`);
-  console.log('🔗 Service: genUICodes - RAW OUTPUT:', _uiCodes);
+//   const endTime = Date.now();
+//   const duration = endTime - startTime;
+//   // console.log(`🎨 Service: Generated UI codes in ${duration}ms`);
+//   console.log('🔗 Service: genUICodes - RAW OUTPUT:', _uiCodes);
   
-  // Log the generated UI codes result
-  console.log('📋 UI CODES GENERATION RESULT:', {
-    uiCodes: _uiCodes,
-    duration: duration,
-    input: {
-      screenDescriptions: screenDescriptions,
-      critiques: critiques
-    }
-  });
+//   // Log the generated UI codes result
+//   console.log('📋 UI CODES GENERATION RESULT:', {
+//     uiCodes: _uiCodes,
+//     duration: duration,
+//     input: {
+//       screenDescriptions: screenDescriptions,
+//       critiques: critiques
+//     }
+//   });
   
-  return _uiCodes;
-}
+//   return _uiCodes;
+// }
 
 // New streaming version that updates UI as each screen completes
 export async function genUICodesStreaming({ screenDescriptions, critiques = [], onProgress = null }) {

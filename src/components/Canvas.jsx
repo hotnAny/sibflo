@@ -9,7 +9,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   const [isCanvasStateLoaded, setIsCanvasStateLoaded] = useState(false)
   
   // Initialize states with default values, will be overridden by useEffect
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(0.1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -57,17 +57,23 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   }
 
   const handleMouseDown = (e) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
-      setIsDragging(true)
-      setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      })
+    // Enable panning with left mouse button, middle mouse button, or left + Alt
+    if (e.button === 0 || e.button === 1 || (e.button === 0 && e.altKey)) {
+      // Only start dragging if clicking on the canvas background (not on design cards or other elements)
+      if (e.target === e.currentTarget || e.target.classList.contains('canvas-grid') || e.target.classList.contains('grid-pattern')) {
+        setIsDragging(true)
+        setDragStart({
+          x: e.clientX - position.x,
+          y: e.clientY - position.y
+        })
+        e.preventDefault() // Prevent text selection during drag
+      }
     }
   }
 
   const handleMouseMove = (e) => {
     if (isDragging) {
+      e.preventDefault() // Prevent text selection during drag
       setPosition({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
@@ -88,7 +94,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   }
 
   const handleResetView = () => {
-    setZoom(1)
+    setZoom(0.1)
     setPosition({ x: 0, y: 0 })
   }
 
@@ -211,12 +217,18 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   // Update canvas size when component mounts or window resizes
   useEffect(() => {
     const updateCanvasSize = () => {
-      if (canvasRef.current) {
-        setCanvasSize({
-          width: canvasRef.current.offsetWidth,
-          height: canvasRef.current.offsetHeight
-        })
-      }
+      // Get the viewport dimensions
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      
+      // Calculate 10x viewport size while maintaining aspect ratio
+      const canvasWidth = viewportWidth * 10
+      const canvasHeight = viewportHeight * 10
+      
+      setCanvasSize({
+        width: canvasWidth,
+        height: canvasHeight
+      })
     }
 
     updateCanvasSize()
@@ -232,19 +244,26 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     if (canvas) {
       canvas.addEventListener('wheel', handleWheel, { passive: false })
       canvas.addEventListener('mousedown', handleMouseDown)
-      canvas.addEventListener('mousemove', handleMouseMove)
-      canvas.addEventListener('mouseup', handleMouseUp)
-      canvas.addEventListener('mouseleave', handleMouseUp)
 
       return () => {
         canvas.removeEventListener('wheel', handleWheel)
         canvas.removeEventListener('mousedown', handleMouseDown)
-        canvas.removeEventListener('mousemove', handleMouseMove)
-        canvas.removeEventListener('mouseup', handleMouseUp)
-        canvas.removeEventListener('mouseleave', handleMouseUp)
       }
     }
   }, [zoom, isDragging, position, dragStart])
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, dragStart])
 
   return (
     <div className="canvas-container">
@@ -252,9 +271,12 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
         ref={canvasRef}
         className="canvas"
         style={{
-          transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+          width: `${canvasSize.width}px`,
+          height: `${canvasSize.height}px`,
+          transform: `translate(-50%, -50%) scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
+
       >
         <div className="canvas-grid">
           {/* Grid pattern */}

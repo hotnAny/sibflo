@@ -17,7 +17,17 @@ Once a design is generated, call genScreenDescriptions to generate screen specs 
 
 Add an icon button on each design card to call genUICodesStreaming and as the ui codes are being generated, bring up a pop-up view that looks like the screen shot.
 
+
+Adjust the slider style based on the screenshot:
+- the knob should be draggable
+- different options should be aligned with the slider
+- the container can be wider
+- hovering each option shows a tooltip that shows its description
+- the create design button should be fixed, floating near the bottom
+
+- add some bottom padding to the slider container
+- each design option can fit in two lines
+
 ----
 
-
-
+Do not display or initiate the floating slider widget until a design space is created or restored, especially upon refreshing the page. 

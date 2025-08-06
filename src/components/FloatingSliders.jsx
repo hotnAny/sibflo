@@ -1,41 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Check, Sparkles } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { genOverallDesigns, genScreenDescriptions } from '../services/generationService'
 import { stateStorage } from '../services/stateStorage'
 import './FloatingSliders.css'
 
-const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onAddSlider, onDesignCreated, currentTrialId }) => {
-  // Flag to prevent saving state before loading initial state
-  const [isSlidersStateLoaded, setIsSlidersStateLoaded] = useState(false)
-  
-  // Initialize state with default value, will be overridden by useEffect
-  const [isCollapsed, setIsCollapsed] = useState(false)
+const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCreated, currentTrialId }) => {
   const [draggedSlider, setDraggedSlider] = useState(null)
   const [isCreatingDesign, setIsCreatingDesign] = useState(false)
 
-  // Load sliders state from localStorage on component mount
-  useEffect(() => {
-    const savedState = stateStorage.loadSlidersState()
-    if (savedState) {
-      setIsCollapsed(savedState.isCollapsed)
-      console.log('🔄 Sliders state restored from localStorage')
-    }
-    // Mark state as loaded to enable saving
-    setIsSlidersStateLoaded(true)
-  }, [])
 
-  // Save sliders state to localStorage whenever isCollapsed changes (but only after initial load)
-  useEffect(() => {
-    if (!isSlidersStateLoaded) {
-      console.log('⏳ Skipping sliders state save - initial state not loaded yet')
-      return
-    }
-    
-    const currentState = {
-      isCollapsed
-    }
-    stateStorage.saveSlidersState(currentState)
-  }, [isSlidersStateLoaded, isCollapsed])
 
   const handleSliderChange = (id, value) => {
     onUpdateSlider(id, parseInt(value))
@@ -177,120 +150,102 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onAddSlider,
   }
 
   return (
-    <div className={`floating-sliders ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="sliders-header">
-        <h3>Design Space</h3>
-        <div className="header-controls">
+    <>
+      <div className="floating-sliders-wrapper">
+        <div className="floating-sliders">
+        <div className="sliders-header">
+          <h3>Design Space</h3>
+        </div>
+
+        
+          <div className="sliders-content">
+            {sliders.length === 0 ? (
+              <div className="no-sliders">
+                <p>No design space dimensions yet</p>
+                <p>Create a design space using the left panel to generate sliders</p>
+              </div>
+            ) : (
+              <>
+                <div className="sliders-list">
+                  {sliders.map((slider) => (
+                    <div
+                      key={slider.id}
+                      className="slider-item"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, slider)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, slider)}
+                    >
+                      <div className="slider-header">
+                        <div className="slider-checkbox">
+                          <Check size={14} />
+                        </div>
+                        <div className="slider-info">
+                          <span className="slider-label">{slider.label}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="slider-control">
+                        <div className="slider-range">
+                          {slider.options && Array.isArray(slider.options) ? (
+                            <div className="slider-options">
+                              {slider.options.map((option, optionIndex) => (
+                                <span 
+                                  key={optionIndex} 
+                                  className={`option-label ${optionIndex === slider.value ? 'active' : ''}`}
+                                  title={option.option_description ? `${option.option_name}: ${option.option_description}` : option.option_name}
+                                  onClick={() => handleSliderChange(slider.id, optionIndex)}
+                                >
+                                  <span>{option.option_name}</span>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="numeric-options">
+                              {Array.from({ length: slider.max - slider.min + 1 }, (_, i) => i + slider.min).map((value) => (
+                                <span
+                                  key={value}
+                                  className={`option-label ${value === slider.value ? 'active' : ''}`}
+                                  title={`${slider.label}: ${value}`}
+                                  onClick={() => handleSliderChange(slider.id, value)}
+                                >
+                                  <span>{value}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        
+        {/* Fixed Create Design Button - positioned relative to main container */}
+        {sliders.length > 0 && (
           <button 
-            className="add-slider-btn"
-            onClick={onAddSlider}
-            title="Add new slider"
+            className="floating-create-design-btn"
+            onClick={handleCreateDesign}
+            disabled={isCreatingDesign || sliders.length === 0}
           >
-            <Plus size={16} />
+            {isCreatingDesign ? (
+              <>
+                <div className="spinner"></div>
+                Creating Design...
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                Create Design
+              </>
+            )}
           </button>
-          <button 
-            className="collapse-btn"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            title={isCollapsed ? "Expand" : "Collapse"}
-          >
-            {isCollapsed ? <Plus size={16} /> : <X size={16} />}
-          </button>
+        )}
         </div>
       </div>
-
-      {!isCollapsed && (
-        <div className="sliders-content">
-          {sliders.length === 0 ? (
-            <div className="no-sliders">
-              <p>No design space dimensions yet</p>
-              <p>Create a design space using the left panel to generate sliders</p>
-            </div>
-          ) : (
-            <>
-              <div className="sliders-list">
-                {sliders.map((slider) => (
-                  <div
-                    key={slider.id}
-                    className="slider-item"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, slider)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, slider)}
-                  >
-                    <div className="slider-header">
-                      <div className="slider-checkbox">
-                        <Check size={14} />
-                      </div>
-                      <div className="slider-info">
-                        <span className="slider-label">{slider.label}</span>
-                      </div>
-                      <button
-                        className="remove-slider-btn"
-                        onClick={() => onRemoveSlider(slider.id)}
-                        title="Remove slider"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                    
-                    <div className="slider-control">
-                      <input
-                        type="range"
-                        min={slider.min}
-                        max={slider.max}
-                        value={slider.value}
-                        onChange={(e) => handleSliderChange(slider.id, e.target.value)}
-                        className="slider-input"
-                      />
-                      <div className="slider-range">
-                        {slider.options && Array.isArray(slider.options) ? (
-                          <div className="slider-options">
-                            {slider.options.map((option, optionIndex) => (
-                              <span 
-                                key={optionIndex} 
-                                className={`option-label ${optionIndex === slider.value ? 'active' : ''}`}
-                                title={option.option_description || option.option_name}
-                              >
-                                {option.option_name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <>
-                            <span>{slider.min}</span>
-                            <span>{slider.max}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="create-design-section">
-                <button 
-                  className="create-design-btn"
-                  onClick={handleCreateDesign}
-                  disabled={isCreatingDesign || sliders.length === 0}
-                >
-                  {isCreatingDesign ? (
-                    <>
-                      <div className="spinner"></div>
-                      Creating Design...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={16} />
-                      Create Design
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-    </div>
+    </>
   )
 }
 

@@ -12,13 +12,17 @@ function App() {
   
   // Initialize states with default values, will be overridden by useEffect
   const [leftPanelOpen, setLeftPanelOpen] = useState(false)
-  const [sliders, setSliders] = useState([
-    { id: 1, label: 'Opacity', value: 50, min: 0, max: 100 },
-    { id: 2, label: 'Scale', value: 75, min: 0, max: 100 },
-    { id: 3, label: 'Rotation', value: 0, min: 0, max: 360 }
-  ])
+  const [sliders, setSliders] = useState([]) // Start with empty sliders until design space is created
   const [designCards, setDesignCards] = useState([])
   const [currentTrialId, setCurrentTrialId] = useState(null)
+
+  // Helper function to determine if we have a valid design space
+  const hasValidDesignSpace = () => {
+    // A valid design space exists when:
+    // 1. We have a current trial ID (indicating a design space was generated)
+    // 2. AND we have sliders with dimension properties (not just default sliders)
+    return currentTrialId && sliders.some(slider => slider.dimension)
+  }
 
   // Load state from localStorage on component mount
   useEffect(() => {
@@ -41,27 +45,19 @@ function App() {
       return
     }
     
+    // Only save state if we have a valid design space, otherwise save minimal state
     const currentState = {
       leftPanelOpen,
-      sliders,
+      sliders: hasValidDesignSpace() ? sliders : [], // Don't save default sliders
       designCards,
-      currentTrialId
+      currentTrialId: hasValidDesignSpace() ? currentTrialId : null // Clear trial ID if no valid design space
     }
     stateStorage.saveAppState(currentState)
   }, [isStateLoaded, leftPanelOpen, sliders, designCards, currentTrialId])
 
   const toggleLeftPanel = () => setLeftPanelOpen(!leftPanelOpen)
 
-  const addSlider = () => {
-    const newSlider = {
-      id: Date.now(),
-      label: `Slider ${sliders.length + 1}`,
-      value: 50,
-      min: 0,
-      max: 100
-    }
-    setSliders([...sliders, newSlider])
-  }
+
 
   const updateSlider = (id, value) => {
     setSliders(sliders.map(slider => 
@@ -158,14 +154,15 @@ function App() {
         onDesignSpaceGenerated={handleDesignSpaceGenerated}
       />
       
-      <FloatingSliders 
-        sliders={sliders}
-        onUpdateSlider={updateSlider}
-        onRemoveSlider={removeSlider}
-        onAddSlider={addSlider}
-        onDesignCreated={handleDesignCreated}
-        currentTrialId={currentTrialId}
-      />
+      {hasValidDesignSpace() && (
+        <FloatingSliders 
+          sliders={sliders}
+          onUpdateSlider={updateSlider}
+          onRemoveSlider={removeSlider}
+          onDesignCreated={handleDesignCreated}
+          currentTrialId={currentTrialId}
+        />
+      )}
     </div>
   )
 }

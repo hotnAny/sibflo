@@ -41,11 +41,7 @@ class StateStorage {
         console.log('📂 App state loaded from localStorage')
         return {
           leftPanelOpen: appState.leftPanelOpen ?? false,
-          sliders: appState.sliders ?? [
-            { id: 1, label: 'Opacity', value: 50, min: 0, max: 100 },
-            { id: 2, label: 'Scale', value: 75, min: 0, max: 100 },
-            { id: 3, label: 'Rotation', value: 0, min: 0, max: 360 }
-          ],
+          sliders: appState.sliders ?? [], // Don't load default sliders, start empty
           designCards: appState.designCards ?? [],
           currentTrialId: appState.currentTrialId ?? null
         }
@@ -54,14 +50,10 @@ class StateStorage {
       console.error('❌ Failed to load app state:', error)
     }
     
-    // Return default state if loading fails
+    // Return default state if loading fails - no default sliders
     return {
       leftPanelOpen: false,
-      sliders: [
-        { id: 1, label: 'Opacity', value: 50, min: 0, max: 100 },
-        { id: 2, label: 'Scale', value: 75, min: 0, max: 100 },
-        { id: 3, label: 'Rotation', value: 0, min: 0, max: 360 }
-      ],
+      sliders: [], // Start with empty sliders until design space is created
       designCards: [],
       currentTrialId: null
     }
