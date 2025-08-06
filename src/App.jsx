@@ -1,11 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import Canvas from './components/Canvas'
 import FloatingSliders from './components/FloatingSliders'
 import LeftPanel from './components/LeftPanel'
 import { trialLogger } from './services/trialLogger'
+import { stateStorage } from './services/stateStorage'
 
 function App() {
+  // Flag to prevent saving state before loading initial state
+  const [isStateLoaded, setIsStateLoaded] = useState(false)
+  
+  // Initialize states with default values, will be overridden by useEffect
   const [leftPanelOpen, setLeftPanelOpen] = useState(false)
   const [sliders, setSliders] = useState([
     { id: 1, label: 'Opacity', value: 50, min: 0, max: 100 },
@@ -14,6 +19,36 @@ function App() {
   ])
   const [designCards, setDesignCards] = useState([])
   const [currentTrialId, setCurrentTrialId] = useState(null)
+
+  // Load state from localStorage on component mount
+  useEffect(() => {
+    const savedState = stateStorage.loadAppState()
+    if (savedState) {
+      setLeftPanelOpen(savedState.leftPanelOpen)
+      setSliders(savedState.sliders)
+      setDesignCards(savedState.designCards)
+      setCurrentTrialId(savedState.currentTrialId)
+      console.log('🔄 App state restored from localStorage')
+    }
+    // Mark state as loaded to enable saving
+    setIsStateLoaded(true)
+  }, [])
+
+  // Save state to localStorage whenever relevant state changes (but only after initial load)
+  useEffect(() => {
+    if (!isStateLoaded) {
+      console.log('⏳ Skipping state save - initial state not loaded yet')
+      return
+    }
+    
+    const currentState = {
+      leftPanelOpen,
+      sliders,
+      designCards,
+      currentTrialId
+    }
+    stateStorage.saveAppState(currentState)
+  }, [isStateLoaded, leftPanelOpen, sliders, designCards, currentTrialId])
 
   const toggleLeftPanel = () => setLeftPanelOpen(!leftPanelOpen)
 

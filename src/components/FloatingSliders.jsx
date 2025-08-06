@@ -1,12 +1,41 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, X, Check, Sparkles } from 'lucide-react'
 import { genOverallDesigns, genScreenDescriptions } from '../services/generationService'
+import { stateStorage } from '../services/stateStorage'
 import './FloatingSliders.css'
 
 const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onAddSlider, onDesignCreated, currentTrialId }) => {
+  // Flag to prevent saving state before loading initial state
+  const [isSlidersStateLoaded, setIsSlidersStateLoaded] = useState(false)
+  
+  // Initialize state with default value, will be overridden by useEffect
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [draggedSlider, setDraggedSlider] = useState(null)
   const [isCreatingDesign, setIsCreatingDesign] = useState(false)
+
+  // Load sliders state from localStorage on component mount
+  useEffect(() => {
+    const savedState = stateStorage.loadSlidersState()
+    if (savedState) {
+      setIsCollapsed(savedState.isCollapsed)
+      console.log('🔄 Sliders state restored from localStorage')
+    }
+    // Mark state as loaded to enable saving
+    setIsSlidersStateLoaded(true)
+  }, [])
+
+  // Save sliders state to localStorage whenever isCollapsed changes (but only after initial load)
+  useEffect(() => {
+    if (!isSlidersStateLoaded) {
+      console.log('⏳ Skipping sliders state save - initial state not loaded yet')
+      return
+    }
+    
+    const currentState = {
+      isCollapsed
+    }
+    stateStorage.saveSlidersState(currentState)
+  }, [isSlidersStateLoaded, isCollapsed])
 
   const handleSliderChange = (id, value) => {
     onUpdateSlider(id, parseInt(value))

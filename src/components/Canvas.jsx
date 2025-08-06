@@ -1,9 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { ZoomIn, ZoomOut, Move, X, Code, Eye, Loader2 } from 'lucide-react'
 import UIView from './UIView'
+import { stateStorage } from '../services/stateStorage'
 import './Canvas.css'
 
 const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentTrialId }) => {
+  // Flag to prevent saving state before loading initial state
+  const [isCanvasStateLoaded, setIsCanvasStateLoaded] = useState(false)
+  
+  // Initialize states with default values, will be overridden by useEffect
   const [zoom, setZoom] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -13,6 +18,36 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   const [selectedDesign, setSelectedDesign] = useState(null)
   const [generatingDesignId, setGeneratingDesignId] = useState(null)
   const canvasRef = useRef(null)
+
+  // Load canvas state from localStorage on component mount
+  useEffect(() => {
+    const savedState = stateStorage.loadCanvasState()
+    if (savedState) {
+      setZoom(savedState.zoom)
+      setPosition(savedState.position)
+      setUiViewOpen(savedState.uiViewOpen)
+      setSelectedDesign(savedState.selectedDesign)
+      console.log('🔄 Canvas state restored from localStorage')
+    }
+    // Mark state as loaded to enable saving
+    setIsCanvasStateLoaded(true)
+  }, [])
+
+  // Save canvas state to localStorage whenever relevant state changes (but only after initial load)
+  useEffect(() => {
+    if (!isCanvasStateLoaded) {
+      console.log('⏳ Skipping canvas state save - initial state not loaded yet')
+      return
+    }
+    
+    const currentState = {
+      zoom,
+      position,
+      uiViewOpen,
+      selectedDesign
+    }
+    stateStorage.saveCanvasState(currentState)
+  }, [isCanvasStateLoaded, zoom, position, uiViewOpen, selectedDesign])
 
   const handleWheel = (e) => {
     e.preventDefault()
@@ -72,13 +107,13 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     const cardWidth = 300 // Width of design card
     const cardSpacing = 50 // Spacing between cards
     
-    console.log('🎨 getDesignCardPosition called:', { index, totalCards })
+    // console.log('🎨 getDesignCardPosition called:', { index, totalCards })
     
     // Simple linear progression: each card to the right of the previous
     const x = centerPos.x + (index * (cardWidth + cardSpacing))
     const y = centerPos.y + (index * 20) // Small vertical offset to avoid perfect alignment
     
-    console.log('🎨 Positioning card', index, ':', { x, y })
+    // console.log('🎨 Positioning card', index, ':', { x, y })
     return { x, y }
   }
 

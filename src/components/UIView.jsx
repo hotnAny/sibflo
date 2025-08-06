@@ -1,44 +1,57 @@
 import { useState, useEffect, useMemo } from 'react'
 import { X, Code, ArrowLeft, ArrowRight } from 'lucide-react'
-import { trialLogger } from '../services/trialLogger'
+import { stateStorage } from '../services/stateStorage'
 import './UIView.css'
 
 const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
-  // const [generatedCodes, setGeneratedCodes] = useState({})
+  // Flag to prevent saving state before loading initial state
+  const [isUIViewStateLoaded, setIsUIViewStateLoaded] = useState(false)
+  
   const [selectedTask, setSelectedTask] = useState(null)
   const [selectedScreen, setSelectedScreen] = useState(null)
   const [selectedDesign, setSelectedDesign] = useState(null)
 
-  // Create a unique key for this design to scope the generatedCodes
-  // const designKey = useMemo(() => {
-  //   // Use the design object's existing ID directly
-  //   return design?.id || 'default'
-  // }, [design?.id])
-
+  // Load UIView state when component opens or design changes
   useEffect(() => {
     if (isOpen && design) {
       // Retrieve all data from the design object and trial logger
       setSelectedDesign(design)
+      
+      // Load saved UIView state for this specific design
+      const designId = design.id || design.design_name || 'default'
+      const savedState = stateStorage.loadUIViewState(designId)
+      if (savedState) {
+        setSelectedTask(savedState.selectedTask)
+        setSelectedScreen(savedState.selectedScreen)
+        console.log('🔄 UIView state restored from localStorage')
+      }
+      
+      // Mark state as loaded to enable saving
+      setIsUIViewStateLoaded(true)
+    } else {
+      // Reset state when closing
+      setIsUIViewStateLoaded(false)
+      setSelectedTask(null)
+      setSelectedScreen(null)
+      setSelectedDesign(null)
     }
   }, [isOpen, design, currentTrialId])
 
-  // useEffect(() => {
-  //   console.log('🎯 selectedTask changed:', selectedTask)
-  // }, [selectedTask])
-
-  // Get the current design's generated codes
-  // const getCurrentDesignCodes = () => {
-  //   // Get codes from local state (populated by retrieveDesignData)
-  //   const localCodes = generatedCodes[designKey] || []
+  // Save UIView state to localStorage whenever relevant state changes
+  useEffect(() => {
+    if (!isUIViewStateLoaded || !isOpen || !design) {
+      console.log('⏳ Skipping UIView state save - not ready yet')
+      return
+    }
     
-  //   console.log('📊 getCurrentDesignCodes - returning codes from local state:', {
-  //     designKey,
-  //     codesCount: localCodes.length,
-  //     hasCodes: localCodes.some(code => code)
-  //   })
-    
-  //   return localCodes
-  // }
+    const designId = design.id || design.design_name || 'default'
+    const currentState = {
+      selectedTask,
+      selectedScreen,
+      designId
+    }
+    stateStorage.saveUIViewState(currentState)
+  }, [isUIViewStateLoaded, isOpen, design, selectedTask, selectedScreen])
 
   const getScreenTitle = (index) => {
     // Use screens from design.screens if available, otherwise use the screens prop
@@ -90,13 +103,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     const screensToUse = selectedDesign.screens
     const taskScreenMapping = selectedDesign.taskScreenMapping
     
-    // console.log('🔍 getFilteredScreens called with:', {
-    //   selectedTask,
-    //   hasTaskScreenMapping: !!taskScreenMapping,
-    //   taskScreenMapping: taskScreenMapping,
-    //   screensToUseLength: screensToUse.length
-    // })
-    
     // If no task is selected, return deduplicated screens
     if (selectedTask == null) {
       // console.log('📋 No task selected, showing deduplicated screens')
@@ -140,22 +146,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
       // console.log('📋 Filtered screens (array of objects):', filteredScreens)
       return filteredScreens
     }
-
-    // If taskScreens is a single object with screen_id and interaction
-    // if (typeof taskScreens === 'object' && taskScreens !== null) {
-    //   const screenId = taskScreens.screen_id || taskScreens.id
-    //   if (screenId) {
-    //     const screen = screensToUse.find(s => s.screen_id === screenId || s.id === screenId)
-    //     if (screen) {
-    //       const filteredScreens = [{
-    //         ...screen,
-    //         interaction: taskScreens.interaction
-    //       }]
-    //       console.log('📋 Filtered screens (single object):', filteredScreens)
-    //       return filteredScreens
-    //     }
-    //   }
-    // }
 
     console.log('⚠️ Unknown taskScreens format:', typeof taskScreens, taskScreens)
     return []
@@ -238,47 +228,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     }
   // }
 
-  const deduplicateScreens = (screens) => {
-    if (!screens || screens.length === 0) return screens
-    
-    const uniqueScreens = []
-    const seenContent = new Set()
-    
-    console.log('🔍 Starting deduplication for', screens.length, 'screens')
-    
-    screens.forEach((screen, index) => {
-      // Create a content hash based on screen specification, title, and ui_code
-      let contentHash = ''
-      
-      if (screen.screen_specification) {
-        contentHash += screen.screen_specification
-      } else if (screen.title) {
-        contentHash += screen.title
-      } else {
-        contentHash += `screen-${index}`
-      }
-      
-      // Also include ui_code in the hash if available
-      if (screen.ui_code) {
-        contentHash += `|ui_code:${screen.ui_code.substring(0, 100)}` // Use first 100 chars of ui_code
-      }
-      
-      console.log(`🔍 Screen ${index} content hash:`, contentHash.substring(0, 50) + '...')
-      
-      // If we haven't seen this content before, add it
-      if (!seenContent.has(contentHash)) {
-        seenContent.add(contentHash)
-        uniqueScreens.push(screen)
-        console.log(`✅ Screen ${index} added to unique list`)
-      } else {
-        console.log(`❌ Screen ${index} is a duplicate and skipped`)
-      }
-    })
-    
-    console.log('🔍 Deduplicated screens:', uniqueScreens.length, 'from', screens.length)
-    return uniqueScreens
-  }
-
   const handleTaskClick = (taskIndex) => {
     console.log('🎯 Task clicked:', taskIndex, 'Current selectedTask:', selectedTask)
     
@@ -316,18 +265,18 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     return screen?.interaction_description || "User can interact with this screen to complete the task."
   }
 
-  const getTaskDescription = (taskIndex) => {
-    // Define task descriptions based on index
-    const taskDescriptions = [
-      "Plan a weekend of activities for my child",
-      "Find educational games and activities", 
-      "Schedule outdoor activities and playtime",
-      "Organize creative arts and crafts sessions",
-      "Plan family bonding activities"
-    ]
+  // const getTaskDescription = (taskIndex) => {
+  //   // Define task descriptions based on index
+  //   const taskDescriptions = [
+  //     "Plan a weekend of activities for my child",
+  //     "Find educational games and activities", 
+  //     "Schedule outdoor activities and playtime",
+  //     "Organize creative arts and crafts sessions",
+  //     "Plan family bonding activities"
+  //   ]
     
-    return taskDescriptions[taskIndex] || `Task ${taskIndex + 1}`
-  }
+  //   return taskDescriptions[taskIndex] || `Task ${taskIndex + 1}`
+  // }
 
   const getTasksFromTrial = () => {
     if (!currentTrialId) {
@@ -360,15 +309,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     
     // Get the UI code from the screen object first, then fall back to generatedCodes
     const screenCode = screen.ui_code || ''
-    
-    // Debug logging
-    // console.log('🎨 Full-screen view - Screen:', {
-    //   screenId: screen.screen_id || screen.id,
-    //   screenTitle: screen.title || screen.screen_specification,
-    //   hasUiCode: !!screen.ui_code,
-    //   hasGeneratedCode: !!getCurrentDesignCodes()[index],
-    //   screenCodeLength: screenCode.length
-    // })
     
     // Get current task screens and calculate navigation state
     const currentTaskScreens = getCurrentTaskScreens()
@@ -480,7 +420,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                     const tasksFromTrial = getTasksFromTrial()
                     
                     // Get the task description for this index
-                    const taskDescription = tasksFromTrial[index] || getTaskDescription(index)
+                    const taskDescription = tasksFromTrial[index]
                     
                     return (
                       <div 
@@ -565,7 +505,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                     <div className="no-screens-message">
                       {selectedTask ? (
                         <div>
-                          <h3>No screens found for task: {getTasksFromTrial()[selectedTask] || getTaskDescription(selectedTask)}</h3>
+                          <h3>No screens found for task: {getTasksFromTrial()[selectedTask]}</h3>
                           <p>This task doesn't have any associated screens in the task screen mapping.</p>
                         </div>
                       ) : (
