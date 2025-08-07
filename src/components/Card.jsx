@@ -5,7 +5,8 @@ import './Card.css'
 const Card = ({ 
   design, 
   index, 
-  position, 
+  position: initialPosition, 
+  zoom = 1,
   generatingDesignId = null,
   onOpenUIView, 
   onGenerateUICode, 
@@ -14,69 +15,70 @@ const Card = ({
 }) => {
   const [isDraggingCard, setIsDraggingCard] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [position, setPosition] = useState(initialPosition)
   const cardRef = useRef(null)
   const cardId = design.id || index
+  
+  // Add refs to store initial positions when dragging starts
+  const initialMousePos = useRef({ x: 0, y: 0 })
+  const initialCardPos = useRef({ x: 0, y: 0 })
+  const currentPositionRef = useRef(position)
+
+  // Update internal position when initialPosition prop changes (only if not dragging)
+  useEffect(() => {
+    if (!isDraggingCard) {
+      setPosition(initialPosition)
+      currentPositionRef.current = initialPosition
+    }
+  }, [initialPosition, isDraggingCard])
+
+  // Keep ref in sync with position state
+  useEffect(() => {
+    currentPositionRef.current = position
+  }, [position])
 
   const handleMouseDown = useCallback((e) => {
     // Start dragging the design card
     setIsDraggingCard(true)
     cardRef.current = e.currentTarget
+    
+    // Record initial mouse position and card position
+    initialMousePos.current = { x: e.clientX, y: e.clientY }
+    initialCardPos.current = { x: currentPositionRef.current.x, y: currentPositionRef.current.y }
+    
     e.preventDefault()
     e.stopPropagation()
   }, [])
 
   const handleMouseMove = useCallback((e) => {
-    if (isDraggingCard && cardRef.current) {
+    if (isDraggingCard) {
       e.preventDefault()
       e.stopPropagation()
       
-      // Direct DOM manipulation - no re-renders
-      const card = cardRef.current
+      // Calculate the difference between current mouse position and initial mouse position
+      const mouseDeltaX = e.clientX - initialMousePos.current.x
+      const mouseDeltaY = e.clientY - initialMousePos.current.y
       
-      // Get current transform values - handle combined transforms
-      const currentTransform = card.style.transform || ''
-      let currentX = position.x
-      let currentY = position.y
+      // Apply the mouse delta to the initial card position, adjusted for zoom
+      const newX = initialCardPos.current.x + mouseDeltaX / zoom
+      const newY = initialCardPos.current.y + mouseDeltaY / zoom
       
-      // Parse the first translate transform (positioning)
-      const translateMatch = currentTransform.match(/translate\(([^,]+),\s*([^)]+)\)/)
-      if (translateMatch) {
-        currentX = parseFloat(translateMatch[1]) || position.x
-        currentY = parseFloat(translateMatch[2]) || position.y
-      }
-      
-      const newX = currentX + e.movementX
-      const newY = currentY + e.movementY
-
-      // Apply the new transform, preserving any additional transforms (like hover)
-      const hoverTransform = isHovered ? ' translateY(-2px)' : ''
-      card.style.transform = `translate(${newX}px, ${newY}px)${hoverTransform}`
+      // Update internal position immediately for smooth dragging
+      setPosition({ x: newX, y: newY })
     }
-  }, [isDraggingCard, position.x, position.y, isHovered])
+  }, [isDraggingCard, zoom])
 
   const handleMouseUp = useCallback(() => {
-    if (isDraggingCard && cardRef.current) {
-      // Only update React state when dragging ends
-      const card = cardRef.current
-      const currentTransform = card.style.transform || ''
-      let finalX = position.x
-      let finalY = position.y
-      
-      // Parse the first translate transform (positioning)
-      const translateMatch = currentTransform.match(/translate\(([^,]+),\s*([^)]+)\)/)
-      if (translateMatch) {
-        finalX = parseFloat(translateMatch[1]) || position.x
-        finalY = parseFloat(translateMatch[2]) || position.y
-      }
-      
+    if (isDraggingCard) {
+      // Only notify parent of position change when dragging ends
       if (onPositionChange) {
-        onPositionChange(cardId, { x: finalX, y: finalY })
+        onPositionChange(cardId, currentPositionRef.current)
       }
       
       setIsDraggingCard(false)
       cardRef.current = null
     }
-  }, [isDraggingCard, position.x, position.y, onPositionChange, cardId])
+  }, [isDraggingCard, onPositionChange, cardId])
 
   // Add global mouse event listeners for dragging
   useEffect(() => {

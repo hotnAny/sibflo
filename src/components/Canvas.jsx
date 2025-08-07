@@ -321,6 +321,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
                 design={design}
                 index={index}
                 position={position}
+                zoom={zoom}
                 generatingDesignId={generatingDesignId}
                 onOpenUIView={handleOpenUIView}
                 onGenerateUICode={handleGenerateUICode}
