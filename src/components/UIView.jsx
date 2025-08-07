@@ -3,7 +3,7 @@ import { X, Code, ArrowLeft, ArrowRight } from 'lucide-react'
 import { stateStorage } from '../services/stateStorage'
 import './UIView.css'
 
-const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
+const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesignUpdate }) => {
   // Flag to prevent saving state before loading initial state
   const [isUIViewStateLoaded, setIsUIViewStateLoaded] = useState(false)
   
@@ -58,6 +58,11 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
             uiCodeSnippet: uiCode ? uiCode.substring(0, 50) + '...' : 'N/A'
           })
           
+          // Save the updated design to the design object
+          if (onDesignUpdate) {
+            onDesignUpdate(updatedDesign)
+          }
+          
           return updatedDesign
         })
       }
@@ -99,6 +104,11 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
         
         // Update the selectedDesign state to trigger final re-render
         setSelectedDesign(updatedDesign)
+        
+        // Save the final updated design to the design object
+        if (onDesignUpdate) {
+          onDesignUpdate(updatedDesign)
+        }
         
         return updatedDesign
       } else {
@@ -405,7 +415,10 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     setIsGenerating(true)
     try {
       // Use the internal generateUICodes function
-      await generateUICodes(design, qualityMode)
+      const updatedDesign = await generateUICodes(design, qualityMode)
+      if (onDesignUpdate) {
+        onDesignUpdate(updatedDesign)
+      }
     } catch (error) {
       console.error('Error generating UI:', error)
       alert(`Failed to generate UI: ${error.message}`)
@@ -452,7 +465,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
             <button className="ui-view-back-btn" onClick={handleBackToGrid}>
               <ArrowLeft size={20} />
             </button>
-            <h2>{screenTitle}</h2>
+            <h3>{screenTitle}</h3>
             <button className="ui-view-close" onClick={onClose}>
               <X size={20} />
             </button>
@@ -460,7 +473,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
           
           <div className="ui-view-fullscreen-content">
             <div className="ui-view-fullscreen-svg">
-              <h3>Screen Preview</h3>
               <div className="svg-render-fullscreen">
                 {renderSVG(screenCode)}
               </div>
@@ -596,7 +608,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                           {screenUICode ? (
                             <div className="screen-card-content-wrapper">
                               <div className="screen-card-render-section">
-                                <h5>Preview</h5>
                                 <div className="screen-card-render">
                                   {renderSVG(screenUICode)}
                                 </div>

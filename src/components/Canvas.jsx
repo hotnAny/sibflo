@@ -4,7 +4,7 @@ import Card from './Card'
 import { stateStorage } from '../services/stateStorage'
 import './Canvas.css'
 
-const Canvas = ({ designCards = [], onRemoveDesignCard, currentTrialId }) => {
+const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentTrialId }) => {
   // Flag to prevent saving state before loading initial state
   const [isCanvasStateLoaded, setIsCanvasStateLoaded] = useState(false)
   
@@ -124,26 +124,34 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, currentTrialId }) => {
   // Calculate center position for design cards
   const getCenterPosition = () => {
     const cardWidth = 300 // Width of design card
-    const cardHeight = 300 // Height of design card (now square)
+    const cardHeight = 300 // Height of design card (square)
     const centerX = Math.max(0, (canvasSize.width - cardWidth) / 2)
     const centerY = Math.max(0, (canvasSize.height - cardHeight) / 2)
     return { x: centerX, y: centerY }
   }
 
-  // Calculate position for design cards - place each card to the right of the previous
+  // Calculate position for design cards - place each card in a grid layout
   const getDesignCardPosition = (index) => {
     const center = getCenterPosition()
     const cardWidth = 300
-    const cardHeight = 200
+    const cardHeight = 300 // Match the actual card dimensions from CSS
     const spacing = 50
     
+    // Calculate how many cards can fit in a row based on available width
     const cardsPerRow = Math.floor((canvasSize.width * 0.8) / (cardWidth + spacing))
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
     
+    // Center the grid horizontally and vertically
+    const gridWidth = Math.min(cardsPerRow, designCards.length) * (cardWidth + spacing) - spacing
+    const gridHeight = (Math.ceil(designCards.length / cardsPerRow)) * (cardHeight + spacing) - spacing
+    
+    const gridStartX = center.x - gridWidth / 2
+    const gridStartY = center.y - gridHeight / 2
+    
     return {
-      x: center.x + (col - cardsPerRow / 2) * (cardWidth + spacing),
-      y: center.y + (row - 2) * (cardHeight + spacing)
+      x: gridStartX + col * (cardWidth + spacing),
+      y: gridStartY + row * (cardHeight + spacing)
     }
   }
 
@@ -279,6 +287,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, currentTrialId }) => {
           // screens={selectedDesign.screens || []}
           onClose={handleCloseUIView}
           currentTrialId={currentTrialId}
+          onDesignUpdate={onDesignUpdate}
         />
       )}
     </div>
