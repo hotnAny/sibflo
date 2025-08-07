@@ -39,3 +39,5 @@ Do not display or initiate the floating slider widget until a design space is cr
         "designParameters": "How do we help parents find and choose activities that fit their needs and their child's interests?: Structured Planning, How do we present the activities themselves to make them appealing and understandable to parents?: Social Inspiration, How do we help parents remember and reuse successful activities from previous weekends?: Nostalgic Review"
     }
 }
+
+each design card's header is at most two lines of text; truncate it otherwise

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import Canvas from './components/Canvas'
 import FloatingSliders from './components/FloatingSliders'
@@ -15,14 +15,23 @@ function App() {
   const [sliders, setSliders] = useState([]) // Start with empty sliders until design space is created
   const [designCards, setDesignCards] = useState([])
   const [currentTrialId, setCurrentTrialId] = useState(null)
+  const [shouldClosePanel, setShouldClosePanel] = useState(false)
 
   // Helper function to determine if we have a valid design space
-  const hasValidDesignSpace = () => {
+  const hasValidDesignSpace = useCallback(() => {
     // A valid design space exists when:
     // 1. We have a current trial ID (indicating a design space was generated)
     // 2. AND we have sliders with dimension properties (not just default sliders)
     return currentTrialId && sliders.some(slider => slider.dimension)
-  }
+  }, [currentTrialId, sliders])
+
+  // Effect to close panel after design space generation
+  useEffect(() => {
+    if (shouldClosePanel && leftPanelOpen) {
+      setLeftPanelOpen(false)
+      setShouldClosePanel(false)
+    }
+  }, [shouldClosePanel, leftPanelOpen])
 
   // Load state from localStorage on component mount
   useEffect(() => {
@@ -53,7 +62,7 @@ function App() {
       currentTrialId: hasValidDesignSpace() ? currentTrialId : null // Clear trial ID if no valid design space
     }
     stateStorage.saveAppState(currentState)
-  }, [isStateLoaded, leftPanelOpen, sliders, designCards, currentTrialId])
+  }, [isStateLoaded, leftPanelOpen, sliders, designCards, currentTrialId, hasValidDesignSpace])
 
   const toggleLeftPanel = () => setLeftPanelOpen(!leftPanelOpen)
 
@@ -80,6 +89,9 @@ function App() {
     if (trial) {
       console.log('📊 Current trial details:', trial)
     }
+
+    // Trigger panel close after design space generation completes
+    setShouldClosePanel(true)
   }
 
   const handleDesignCreated = (design) => {

@@ -275,13 +275,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
               className={`tab ${activeTab === 'gemini' ? 'active' : ''}`} 
               onClick={() => setActiveTab('gemini')}
             >
-              Gemini AI
+              Settings
             </button>
           </div>
 
           {activeTab === 'design-space' && (
             <>
-              <h2>Design Space</h2>
+              {/* <h2>Design Space</h2> */}
               <form onSubmit={handleSubmit} className="design-space-form">
                 {/* Context Section */}
                 <div className="form-section">
@@ -397,7 +397,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
 
           {activeTab === 'gemini' && (
             <>
-              <h2>Gemini AI</h2>
+              {/* <h2>Settings</h2> */}
               <div className="gemini-settings">
                 {/* API Key Section */}
                 <div className="form-section">

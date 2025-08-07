@@ -83,8 +83,8 @@
 .ui-view-close {
   width: 40px;
   height: 40px;
-  background: #ef4444;
-  color: #ffffff;
+  background:none;
+  color: #ef4444;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -95,7 +95,7 @@
 }
 
 .ui-view-close:hover {
-  background: #dc2626;
+  color: #dc2626;
   transform: scale(1.05);
 }
 

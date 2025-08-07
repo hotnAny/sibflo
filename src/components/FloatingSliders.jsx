@@ -215,11 +215,11 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
         <div className="floating-sliders">
         <div className="sliders-header">
           <h3>Design Space</h3>
-          {sliders.length > 0 && (
+          {/* {sliders.length > 0 && (
             <span className="selection-count">
               {selectedSliders.size} of {sliders.length} selected
             </span>
-          )}
+          )} */}
         </div>
 
         

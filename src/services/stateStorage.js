@@ -24,7 +24,7 @@ class StateStorage {
         timestamp: Date.now()
       }
       localStorage.setItem(STORAGE_KEYS.APP_STATE, JSON.stringify(appState))
-      console.log('💾 App state saved to localStorage')
+      // console.log('💾 App state saved to localStorage')
     } catch (error) {
       console.error('❌ Failed to save app state:', error)
     }
@@ -72,7 +72,7 @@ class StateStorage {
         timestamp: Date.now()
       }
       localStorage.setItem(STORAGE_KEYS.CANVAS_STATE, JSON.stringify(canvasState))
-      console.log('💾 Canvas state saved to localStorage')
+      // console.log('💾 Canvas state saved to localStorage')
     } catch (error) {
       console.error('❌ Failed to save canvas state:', error)
     }
