@@ -142,7 +142,7 @@ export const promptDesignSpaceFromIdeas = PromptTemplate.fromTemplate(
   STEP 3 – Create Options
   - For each dimension, list no more than 3 options that sit at clearly different points along that spectrum
   - Each option should represent a distinct approach along the dimension--it should be clear how one option is different from the others
-  - For each option, give one‑sentence description (framed as a question) to help a non-designer understand the option
+  - For each option, give one‑sentence description to help a non-designer understand the option
 
   Divergent Ideas:
   {divergentIdeas}

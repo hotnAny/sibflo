@@ -31,3 +31,11 @@ Adjust the slider style based on the screenshot:
 ----
 
 Do not display or initiate the floating slider widget until a design space is created or restored, especially upon refreshing the page. 
+
+
+
+{
+    "input": {
+        "designParameters": "How do we help parents find and choose activities that fit their needs and their child's interests?: Structured Planning, How do we present the activities themselves to make them appealing and understandable to parents?: Social Inspiration, How do we help parents remember and reuse successful activities from previous weekends?: Nostalgic Review"
+    }
+}

@@ -1,17 +1,37 @@
 import { useState, useEffect } from 'react'
-import { Check, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { genOverallDesigns, genScreenDescriptions } from '../services/generationService'
-import { stateStorage } from '../services/stateStorage'
+// import { stateStorage } from '../services/stateStorage'
 import './FloatingSliders.css'
 
 const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCreated, currentTrialId }) => {
   const [draggedSlider, setDraggedSlider] = useState(null)
   const [isCreatingDesign, setIsCreatingDesign] = useState(false)
+  const [selectedSliders, setSelectedSliders] = useState(new Set())
 
-
+  // Initialize selected sliders when sliders change
+  useEffect(() => {
+    if (sliders.length > 0) {
+      // By default, select all sliders
+      const initialSelected = new Set(sliders.map(slider => slider.id))
+      setSelectedSliders(initialSelected)
+    }
+  }, [sliders])
 
   const handleSliderChange = (id, value) => {
     onUpdateSlider(id, parseInt(value))
+  }
+
+  const handleSliderToggle = (id) => {
+    setSelectedSliders(prev => {
+      const newSelected = new Set(prev)
+      if (newSelected.has(id)) {
+        newSelected.delete(id)
+      } else {
+        newSelected.add(id)
+      }
+      return newSelected
+    })
   }
 
   const handleDragStart = (e, slider) => {
@@ -34,20 +54,33 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
 
   const generateDesignParameters = () => {
     if (!sliders || sliders.length === 0) {
-      return "No design parameters available"
+      return []
     }
 
-    const parameters = sliders.map(slider => {
+    // Only include selected sliders in the design parameters
+    const selectedSlidersList = sliders.filter(slider => selectedSliders.has(slider.id))
+    
+    if (selectedSlidersList.length === 0) {
+      return []
+    }
+
+    return selectedSlidersList.map(slider => {
       if (slider.options && Array.isArray(slider.options) && slider.options.length > 0) {
         const optionIndex = Math.min(slider.value, slider.options.length - 1)
         const selectedOption = slider.options[optionIndex]
-        return `${slider.label}: ${selectedOption?.option_name || 'Unknown'}`
+        return {
+          dimension_description: slider.dimension?.dimension_description || slider.label,
+          selected_option: selectedOption?.option_name || 'Unknown',
+          option_description: selectedOption?.option_description || ''
+        }
       } else {
-        return `${slider.label}: ${slider.value}`
+        return {
+          dimension_description: slider.label,
+          selected_option: slider.value.toString(),
+          option_description: `Value: ${slider.value}`
+        }
       }
     })
-
-    return parameters.join(', ')
   }
 
   const generateDesignParametersForLogging = () => {
@@ -55,7 +88,10 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
       return []
     }
 
-    return sliders.map(slider => {
+    // Only include selected sliders in the logging
+    const selectedSlidersList = sliders.filter(slider => selectedSliders.has(slider.id))
+
+    return selectedSlidersList.map(slider => {
       if (slider.options && Array.isArray(slider.options) && slider.options.length > 0) {
         const optionIndex = Math.min(slider.value, slider.options.length - 1)
         const selectedOption = slider.options[optionIndex]
@@ -80,13 +116,36 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
       return
     }
 
+    // Check if any sliders are selected
+    if (selectedSliders.size === 0) {
+      alert('Please select at least one design dimension before creating a design')
+      return
+    }
+
     setIsCreatingDesign(true)
     try {
-      const designParameters = generateDesignParameters()
+      const designParametersStructured = generateDesignParameters()
       const designParametersForLogging = generateDesignParametersForLogging()
-      console.log('🎨 Creating design with parameters:', designParameters)
       
-      const designs = await genOverallDesigns({ designParameters })
+      // Convert structured format to string for genOverallDesigns compatibility
+      // const designParametersString = designParametersStructured.map(param => 
+      //   `${param.dimension_description}: ${param.selected_option}`
+      // ).join(', ')
+      
+      // console.log('🎨 Creating design with structured parameters:', designParametersStructured)
+      // console.log('🎨 Creating design with string parameters:', designParametersString)
+      
+      // Log the structure for debugging
+      if (designParametersStructured.length > 0) {
+        console.log('📋 Structured parameters breakdown:')
+        designParametersStructured.forEach((param, index) => {
+          console.log(`  ${index + 1}. Dimension: "${param.dimension_description}"`)
+          console.log(`     Selected Option: "${param.selected_option}"`)
+          console.log(`     Option Description: "${param.option_description}"`)
+        })
+      }
+      
+      const designs = await genOverallDesigns({ designParameters: designParametersStructured })
       
       if (designs && Array.isArray(designs) && designs.length > 0) {
         const design = designs[0] // Take the first design
@@ -117,6 +176,7 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
         const enhancedDesign = {
           ...design,
           design_parameters: designParametersForLogging,
+          design_parameters_structured: designParametersStructured, // Add structured format for reference
           screens: screenDescriptions,
           taskScreenMapping: taskScreenMapping
         }
@@ -155,6 +215,11 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
         <div className="floating-sliders">
         <div className="sliders-header">
           <h3>Design Space</h3>
+          {sliders.length > 0 && (
+            <span className="selection-count">
+              {selectedSliders.size} of {sliders.length} selected
+            </span>
+          )}
         </div>
 
         
@@ -178,7 +243,14 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCrea
                     >
                       <div className="slider-header">
                         <div className="slider-checkbox">
-                          <Check size={14} />
+                          <input
+                            type="checkbox"
+                            id={`slider-checkbox-${slider.id}`}
+                            checked={selectedSliders.has(slider.id)}
+                            onChange={() => handleSliderToggle(slider.id)}
+                            className="slider-checkbox-input"
+                            aria-label={`Select ${slider.label} design dimension`}
+                          />
                         </div>
                         <div className="slider-info">
                           <span className="slider-label">{slider.label}</span>

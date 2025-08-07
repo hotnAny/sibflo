@@ -25,7 +25,6 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isGeneratingDesignSpace, setIsGeneratingDesignSpace] = useState(false)
-  const [currentTrialId, setCurrentTrialId] = useState(null)
 
   // Load API key from localStorage on component mount
   useEffect(() => {
@@ -208,7 +207,6 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
         examples: formData.examples,
         comments: formData.comments
       })
-      setCurrentTrialId(trialId)
       console.log('📊 Created new trial:', trialId)
 
       const result = await genDesignSpace({
@@ -390,6 +388,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
 
                 <button type="submit" className="create-btn" disabled={!isApiKeySet || isGeneratingDesignSpace}>
                   {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+                  &nbsp;&nbsp;
                   {isGeneratingDesignSpace ? 'Generating...' : 'Generate Design Space'}
                 </button>
               </form>

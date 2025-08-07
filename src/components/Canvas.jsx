@@ -27,7 +27,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
       setPosition(savedState.position)
       setUiViewOpen(savedState.uiViewOpen)
       setSelectedDesign(savedState.selectedDesign)
-      console.log('🔄 Canvas state restored from localStorage')
+      // console.log('🔄 Canvas state restored from localStorage')
     }
     // Mark state as loaded to enable saving
     setIsCanvasStateLoaded(true)
@@ -36,7 +36,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   // Save canvas state to localStorage whenever relevant state changes (but only after initial load)
   useEffect(() => {
     if (!isCanvasStateLoaded) {
-      console.log('⏳ Skipping canvas state save - initial state not loaded yet')
+      // console.log('⏳ Skipping canvas state save - initial state not loaded yet')
       return
     }
     
@@ -383,7 +383,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
       {/* Canvas controls */}
       <div className="canvas-controls">
         <button onClick={handleZoomIn} className="control-btn">
-          <ZoomIn size={16} />
+          <ZoomIn size={16}/>
         </button>
         <button onClick={handleZoomOut} className="control-btn">
           <ZoomOut size={16} />
