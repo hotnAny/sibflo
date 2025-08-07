@@ -7,9 +7,7 @@ const Card = ({
   index, 
   position: initialPosition, 
   zoom = 1,
-  generatingDesignId = null,
   onOpenUIView, 
-  onGenerateUICode, 
   onRemoveDesignCard,
   onPositionChange 
 }) => {
@@ -151,19 +149,7 @@ const Card = ({
             onClick={() => onOpenUIView(design)}
             title="View UI"
           >
-            <Eye size={14} />
-          </button>
-          <button 
-            className="control-btn"
-            onClick={() => onGenerateUICode(design)}
-            title="Generate UI Code"
-            disabled={generatingDesignId === design.id}
-          >
-            {generatingDesignId === design.id ? (
-              <Loader2 size={14} className="loading-spinner" />
-            ) : (
-              <Code size={14} />
-            )}
+            <Eye size={16} />
           </button>
           {onRemoveDesignCard && (
             <button 
@@ -171,7 +157,7 @@ const Card = ({
               onClick={() => onRemoveDesignCard(design.id || index)}
               title="Remove design"
             >
-              <Trash2 size={14} />
+              <Trash2 size={16} />
             </button>
           )}
         </div>

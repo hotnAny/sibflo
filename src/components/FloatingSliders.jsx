@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Sparkles, ChevronDown } from 'lucide-react'
 import { genOverallDesigns, genScreenDescriptions } from '../services/generationService'
 // import { stateStorage } from '../services/stateStorage'
 import './FloatingSliders.css'
@@ -8,6 +8,8 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
   const [draggedSlider, setDraggedSlider] = useState(null)
   const [isCreatingDesign, setIsCreatingDesign] = useState(false)
   const [selectedSliders, setSelectedSliders] = useState(new Set())
+  const [openDropdown, setOpenDropdown] = useState(null)
+  const dropdownRefs = useRef({})
 
   // Initialize selected sliders when sliders change
   useEffect(() => {
@@ -18,8 +20,29 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
     }
   }, [sliders])
 
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && dropdownRefs.current[openDropdown]) {
+        const dropdownElement = dropdownRefs.current[openDropdown]
+        if (!dropdownElement.contains(event.target)) {
+          setOpenDropdown(null)
+        }
+      }
+    }
+
+    if (openDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openDropdown])
+
   const handleSliderChange = (id, value) => {
     onUpdateSlider(id, parseInt(value))
+    setOpenDropdown(null) // Close dropdown after selection
   }
 
   const handleSliderToggle = (id) => {
@@ -51,6 +74,10 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
     }
     setDraggedSlider(null)
   }
+
+  const toggleDropdown = useCallback((sliderId) => {
+    setOpenDropdown(openDropdown === sliderId ? null : sliderId)
+  }, [openDropdown])
 
   const generateDesignParameters = () => {
     if (!sliders || sliders.length === 0) {
@@ -209,6 +236,66 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
     }
   }
 
+  // Custom dropdown component
+  const CustomDropdown = ({ slider, options, value, onChange }) => {
+    const isOpen = openDropdown === slider.id
+    const selectedOption = options ? options[value] : { option_name: value, option_description: `Value: ${value}` }
+    
+    return (
+      <div 
+        className="custom-dropdown" 
+        ref={(el) => {
+          dropdownRefs.current[slider.id] = el
+        }}
+      >
+        <button
+          className="custom-dropdown-button"
+          onClick={() => toggleDropdown(slider.id)}
+          type="button"
+        >
+          <div className="dropdown-selected-content">
+            <div className="dropdown-option-heading">{selectedOption.option_name || selectedOption}</div>
+            {selectedOption.option_description && (
+              <div className="dropdown-option-subtitle">{selectedOption.option_description}</div>
+            )}
+          </div>
+          <ChevronDown size={16} className={`dropdown-arrow ${isOpen ? 'open' : ''}`} />
+        </button>
+        
+        {isOpen && (
+          <div className="custom-dropdown-menu">
+            {options ? (
+              options.map((option, optionIndex) => (
+                <button
+                  key={optionIndex}
+                  className={`custom-dropdown-option ${optionIndex === value ? 'selected' : ''}`}
+                  onClick={() => onChange(slider.id, optionIndex)}
+                  type="button"
+                >
+                  <div className="dropdown-option-heading">{option.option_name}</div>
+                  {option.option_description && (
+                    <div className="dropdown-option-subtitle">{option.option_description}</div>
+                  )}
+                </button>
+              ))
+            ) : (
+              Array.from({ length: slider.max - slider.min + 1 }, (_, i) => i + slider.min).map((optionValue) => (
+                <button
+                  key={optionValue}
+                  className={`custom-dropdown-option ${optionValue === value ? 'selected' : ''}`}
+                  onClick={() => onChange(slider.id, optionValue)}
+                  type="button"
+                >
+                  <div className="dropdown-option-heading">{optionValue}</div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="floating-sliders-wrapper">
@@ -259,33 +346,12 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
                       
                       <div className="slider-control">
                         <div className="slider-range">
-                          {slider.options && Array.isArray(slider.options) ? (
-                            <div className="slider-options">
-                              {slider.options.map((option, optionIndex) => (
-                                <span 
-                                  key={optionIndex} 
-                                  className={`option-label ${optionIndex === slider.value ? 'active' : ''}`}
-                                  title={option.option_description ? `${option.option_name}: ${option.option_description}` : option.option_name}
-                                  onClick={() => handleSliderChange(slider.id, optionIndex)}
-                                >
-                                  <span>{option.option_name}</span>
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="numeric-options">
-                              {Array.from({ length: slider.max - slider.min + 1 }, (_, i) => i + slider.min).map((value) => (
-                                <span
-                                  key={value}
-                                  className={`option-label ${value === slider.value ? 'active' : ''}`}
-                                  title={`${slider.label}: ${value}`}
-                                  onClick={() => handleSliderChange(slider.id, value)}
-                                >
-                                  <span>{value}</span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          <CustomDropdown
+                            slider={slider}
+                            options={slider.options}
+                            value={slider.value}
+                            onChange={handleSliderChange}
+                          />
                         </div>
                       </div>
                     </div>

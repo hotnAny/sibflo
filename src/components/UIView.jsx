@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Code, ArrowLeft, ArrowRight } from 'lucide-react'
 import { stateStorage } from '../services/stateStorage'
 import './UIView.css'
@@ -10,17 +10,116 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
   const [selectedTask, setSelectedTask] = useState(null)
   const [selectedScreen, setSelectedScreen] = useState(null)
   const [selectedDesign, setSelectedDesign] = useState(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [qualityMode, setQualityMode] = useState('fast') // 'fast' or 'high'
+
+  // Internal function to generate UI codes and update design
+  const generateUICodes = async (designToUpdate, qualityModeToUse = 'fast') => {
+    console.log('🎨 Starting UI code generation for design:', designToUpdate, 'with quality mode:', qualityModeToUse)
+    
+    // Check if design has screens
+    const screensToUse = designToUpdate.screens || []
+    if (!screensToUse || screensToUse.length === 0) {
+      throw new Error('No screens available for UI code generation')
+    }
+
+    try {
+      // Import the generation service
+      const { genUICodesStreaming } = await import('../services/generationService')
+      
+      // Generate UI codes
+      const screenDescriptions = screensToUse.map(screen => {
+        if (typeof screen === 'string') {
+          return { screen_specification: screen }
+        }
+        return screen
+      })
+      
+      // Create a function to update individual screens as they're generated
+      const updateScreenWithCode = (screenIndex, uiCode) => {
+        setSelectedDesign(prevDesign => {
+          if (!prevDesign) return prevDesign
+          
+          const updatedScreens = [...(prevDesign.screens || [])]
+          if (updatedScreens[screenIndex]) {
+            updatedScreens[screenIndex] = {
+              ...updatedScreens[screenIndex],
+              ui_code: uiCode
+            }
+          }
+          
+          const updatedDesign = {
+            ...prevDesign,
+            screens: updatedScreens
+          }
+          
+          console.log(`🎨 Updated screen ${screenIndex + 1} with UI code:`, {
+            screenIndex,
+            uiCodeSnippet: uiCode ? uiCode.substring(0, 50) + '...' : 'N/A'
+          })
+          
+          return updatedDesign
+        })
+      }
+      
+      const generatedUICodes = await genUICodesStreaming({
+        screenDescriptions: screenDescriptions,
+        critiques: [],
+        qualityMode: qualityModeToUse,
+        onProgress: (codes, index, code) => {
+          console.log(`📝 Progress: Screen ${index + 1} code generated (${qualityModeToUse} mode)`)
+          // Update the UI immediately when a screen's code is generated
+          if (code && !code.startsWith('Error:')) {
+            updateScreenWithCode(index, code)
+          }
+        }
+      })
+
+      console.log('✅ UI code generation completed:', generatedUICodes, 'using', qualityModeToUse, 'mode')
+      
+      // Final update to ensure all codes are properly set
+      if (generatedUICodes && generatedUICodes.length > 0) {
+        const updatedDesign = {
+          ...designToUpdate,
+          screens: screensToUse.map((screen, index) => ({
+            ...screen,
+            ui_code: generatedUICodes[index] || ''
+          }))
+        }
+        
+        console.log('🎨 Final design update with UI codes:', {
+          designId: updatedDesign.id,
+          screensCount: updatedDesign.screens?.length || 0,
+          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0,
+          qualityMode: qualityModeToUse,
+          uiCodesSnippets: updatedDesign.screens?.map(screen => 
+            screen.ui_code ? screen.ui_code.substring(0, 50) + '...' : 'N/A'
+          ) || []
+        })
+        
+        // Update the selectedDesign state to trigger final re-render
+        setSelectedDesign(updatedDesign)
+        
+        return updatedDesign
+      } else {
+        throw new Error('No UI codes were generated')
+      }
+    } catch (error) {
+      console.error('❌ Error generating UI codes:', error)
+      throw error
+    }
+  }
 
   // Load UIView state when component opens or design changes
   useEffect(() => {
     if (isOpen && design) {
-      // Retrieve all data from the design object and trial logger
+      // Always update selectedDesign when design prop changes
       setSelectedDesign(design)
       
-      // Load saved UIView state for this specific design
+      // Load saved UIView state for this specific design (only on initial load)
       const designId = design.id || design.design_name || 'default'
       const savedState = stateStorage.loadUIViewState(designId)
-      if (savedState) {
+      if (savedState && !isUIViewStateLoaded) {
         setSelectedTask(savedState.selectedTask)
         setSelectedScreen(savedState.selectedScreen)
         console.log('🔄 UIView state restored from localStorage')
@@ -28,6 +127,12 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
       
       // Mark state as loaded to enable saving
       setIsUIViewStateLoaded(true)
+      
+      console.log('🔄 UIView updated with design data:', {
+        designId: design.id,
+        screensCount: design.screens?.length || 0,
+        uiCodesCount: design.screens?.filter(screen => screen.ui_code).length || 0
+      })
     } else {
       // Reset state when closing
       setIsUIViewStateLoaded(false)
@@ -278,26 +383,34 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
   //   return taskDescriptions[taskIndex] || `Task ${taskIndex + 1}`
   // }
 
+  // Helper function to get tasks from the current trial
   const getTasksFromTrial = () => {
-    if (!currentTrialId) {
-      console.warn('⚠️ No current trial ID available')
-      return []
-    }
-
     try {
       const trials = JSON.parse(localStorage.getItem('sibflo_trials') || '[]')
       const trial = trials.find(t => t.id === currentTrialId)
-      
-      if (trial && trial.input && trial.input.tasks) {
-        console.log('📋 Retrieved tasks from trial:', trial.input.tasks)
-        return trial.input.tasks
-      } else {
-        console.warn('⚠️ No tasks found in trial:', currentTrialId)
-        return []
-      }
+      return trial?.input?.tasks || ['Default task']
     } catch (error) {
-      console.error('❌ Error retrieving tasks from trial:', error)
-      return []
+      console.warn('⚠️ Failed to get tasks from trial:', error)
+      return ['Default task']
+    }
+  }
+
+  // Handle Generate UI button click
+  const handleGenerateUI = async () => {
+    if (!design) {
+      alert('No design available for UI generation')
+      return
+    }
+
+    setIsGenerating(true)
+    try {
+      // Use the internal generateUICodes function
+      await generateUICodes(design, qualityMode)
+    } catch (error) {
+      console.error('Error generating UI:', error)
+      alert(`Failed to generate UI: ${error.message}`)
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -396,7 +509,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
     <div className="ui-view-overlay">
       <div className="ui-view">
         <div className="ui-view-header">
-          <h2>Generate UI Code</h2>
+          <h2>{design?.design_name}</h2>
           <button className="ui-view-close" onClick={onClose}>
             <X size={20} />
           </button>
@@ -447,8 +560,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                 
                 if (filteredScreens.length > 0) {
                   return filteredScreens.map((screen, filteredIndex) => {
-                    // Use screens from design.screens if available, otherwise use the screens prop
-                    const screensToUse = design?.screens || screens
+                    // Use screens from selectedDesign to get the most up-to-date data including UI codes
+                    const screensToUse = selectedDesign?.screens || screens
                     
                     // Find the original index of this screen in the screens array
                     const originalIndex = screensToUse.findIndex(s => 
@@ -465,7 +578,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
                                         `Screen ${filteredIndex + 1}`) || 
                                       `Screen ${filteredIndex + 1}`
                     
-                    // Get the UI code directly from the screen object
+                    // Get the UI code directly from the screen object (from selectedDesign)
                     const screenUICode = screen.ui_code || ''
                     
                     console.log(`🎨 Rendering screen: ${screenTitle} (ID: ${screen.screen_id || screen.id}), UI Code snippet:`, screenUICode ? screenUICode.substring(0, 50) + '...' : 'N/A')
@@ -519,6 +632,37 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
               })()}
             </div>
           </div>
+        </div>
+        
+        {/* Generate UI Button and Quality Dropdown - positioned at lower left */}
+        <div className="ui-view-generate-controls">
+          <select
+            className="ui-view-quality-dropdown"
+            value={qualityMode}
+            onChange={(e) => setQualityMode(e.target.value)}
+            disabled={isGenerating}
+          >
+            <option value="fast">Fast</option>
+            <option value="high">HQ</option>
+          </select>
+          
+          <button 
+            className="ui-view-generate-btn"
+            onClick={handleGenerateUI}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <>
+                <div className="spinner"></div>
+                Generating ...
+              </>
+            ) : (
+              <>
+                <Code size={16} style={{ color: 'white' }} />
+                Generate UI
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

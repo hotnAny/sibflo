@@ -38,8 +38,8 @@ Do not display or initiate the floating slider widget until a design space is cr
 
 ----
 
-each design card's header is at most two lines of text; truncate it otherwise
+Next to the gen ui button, let the user choose fast vs. high quality: fast uses modelLite and high quality uses modelPro
 
-Arrange the design options vertically instead of horizontally
 
-Move the gen ui code button from the design card to the uiview
+
+

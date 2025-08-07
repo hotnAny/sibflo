@@ -1,4 +1,4 @@
-import { overallDesignChain, screenDescriptionChain, uiCodeChain, taskFlowChain, uiCodeRevisionChain, designSpaceChain } from './chains.js';
+import { overallDesignChain, screenDescriptionChain, taskFlowChain, uiCodeRevisionChain, designSpaceChain } from './chains.js';
 import { RunnableSequence, RunnableLambda } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { generateImage } from './model.js';
@@ -201,23 +201,33 @@ export function updateScreenDescriptions(screenDescriptions) {
 // }
 
 // New streaming version that updates UI as each screen completes
-export async function genUICodesStreaming({ screenDescriptions, critiques = [], onProgress = null }) {
+export async function genUICodesStreaming({ screenDescriptions, critiques = [], qualityMode = 'fast', onProgress = null }) {
   const startTime = Date.now();
-  
-  // if (_uiCodes.length > 0 && critiques.length === 0) {
-    // return _uiCodes;
-  // }
   
   try {
     // Initialize empty array for streaming updates
     const streamingCodes = new Array(screenDescriptions.length).fill('');
     
+    // Import the necessary modules for model selection
+    const { createAdaptedModels } = await import('./chains.js');
+    const { promptSVGCodeGeneration } = await import('./prompts.js');
+    
     // Create parallel promises for UI code generation
     const uiCodePromises = screenDescriptions.map(async (screen, index) => {
       try {
-        // Use the existing uiCodeChain for individual screen generation
-        const input = { screenDescriptions: [screen] };
-        const response = await uiCodeChain.invoke(input);
+        // Use the appropriate model based on quality mode
+        const adaptedModels = createAdaptedModels();
+        const model = qualityMode === 'high' ? adaptedModels.modelPro : adaptedModels.modelLite;
+        
+        console.log(`🎨 Generating UI code for screen ${index + 1} using ${qualityMode} mode (${qualityMode === 'high' ? 'modelPro' : 'modelLite'})`);
+        
+        // Format the prompt
+        const prompt = await promptSVGCodeGeneration.format({
+          screenDescription: JSON.stringify(screen, null, 2)
+        });
+        
+        // Generate the code using the selected model
+        const response = await model.invoke(prompt);
         
         let code;
         if (Array.isArray(response) && response.length > 0) {
@@ -225,7 +235,7 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
         } else if (typeof response === 'string') {
           code = response;
         } else {
-          throw new Error('Unexpected response format from uiCodeChain');
+          throw new Error('Unexpected response format from model');
         }
         
         const cleanedCode = code.replace(/```[\w-]*\n|```/g, '');
@@ -237,12 +247,12 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
         // Update the streaming array
         streamingCodes[index] = cleanedCode;
         
-        // Call progress callback if provided
+        // Call progress callback if provided - this will update the UI immediately
         if (onProgress) {
           onProgress([...streamingCodes], index, cleanedCode);
         }
         
-        console.log(`✅ Generated UI code for screen ${index + 1}/${screenDescriptions.length}`);
+        console.log(`✅ Generated UI code for screen ${index + 1}/${screenDescriptions.length} using ${qualityMode} mode`);
         return resultObj;
       } catch (error) {
         console.error(`❌ Error generating UI code for screen ${index + 1}:`, error);
@@ -272,13 +282,14 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
 
     const endTime = Date.now();
     const duration = endTime - startTime;
-    console.log(`🎨 Service: Generated UI codes in ${duration}ms`);
+    console.log(`🎨 Service: Generated UI codes in ${duration}ms using ${qualityMode} mode`);
     console.log('🔗 Service: genUICodesStreaming - RAW OUTPUT:', _uiCodes);
     
     // Log the generated UI codes result (streaming)
     console.log('📋 UI CODES GENERATION RESULT (STREAMING):', {
       uiCodes: _uiCodes,
       duration: duration,
+      qualityMode: qualityMode,
       input: {
         screenDescriptions: screenDescriptions,
         critiques: critiques

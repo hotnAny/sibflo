@@ -46,7 +46,7 @@ class GeminiModelAdapter {
 }
 
 // Create adapted models for LangChain compatibility
-function createAdaptedModels() {
+export function createAdaptedModels() {
   if (!modelLite || !modelPro || !modelFlash) {
     throw new Error('Models not initialized. Call setGeminiModels() first.');
   }
@@ -404,6 +404,7 @@ const _generateUICodes = async (input) => {
     }
     
     const screens = input.screenDescriptions;
+    const useLite = input.useLite;
 
     // Create parallel promises for UI code generation
     const uiCodePromises = screens.map(async (screen, index) => {
@@ -413,7 +414,8 @@ const _generateUICodes = async (input) => {
             const prompt = await promptSVGCodeGeneration.format({
                 screenDescription: JSON.stringify(screen, null, 2)
             });
-            const code = await adaptedModels.modelLite.invoke(prompt);
+            const model = useLite ? adaptedModels.modelLite : adaptedModels.modelPro;
+            const code = await model.invoke(prompt);
             const cleanedCode = code.replace(/```[\w-]*\n|```/g, '');
             return {
                 screenIndex: index,

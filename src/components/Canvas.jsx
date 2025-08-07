@@ -4,7 +4,7 @@ import Card from './Card'
 import { stateStorage } from '../services/stateStorage'
 import './Canvas.css'
 
-const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentTrialId }) => {
+const Canvas = ({ designCards = [], onRemoveDesignCard, currentTrialId }) => {
   // Flag to prevent saving state before loading initial state
   const [isCanvasStateLoaded, setIsCanvasStateLoaded] = useState(false)
   
@@ -16,7 +16,6 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
   const [uiViewOpen, setUiViewOpen] = useState(false)
   const [selectedDesign, setSelectedDesign] = useState(null)
-  const [generatingDesignId, setGeneratingDesignId] = useState(null)
   
   // State for card positions
   const [cardPositions, setCardPositions] = useState({})
@@ -73,6 +72,20 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   }, [designCards, isCanvasStateLoaded])
 
   const handleWheel = (e) => {
+    // Check if the scroll event is happening over a design card or its content
+    const target = e.target
+    const isOverDesignCard = target.closest('.design-card') || 
+                            target.classList.contains('design-card') ||
+                            target.classList.contains('design-card-content') ||
+                            target.classList.contains('design-card-header') ||
+                            target.classList.contains('design-card-footer')
+    
+    if (isOverDesignCard) {
+      // Don't prevent default - let the card content scroll naturally
+      return
+    }
+    
+    // Only zoom if scrolling over the canvas background
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
     const newZoom = Math.max(0.1, Math.min(3, zoom * delta))
@@ -119,92 +132,18 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
 
   // Calculate position for design cards - place each card to the right of the previous
   const getDesignCardPosition = (index) => {
-    const centerPos = getCenterPosition()
-    const cardWidth = 300 // Width of design card
-    const cardSpacing = 50 // Spacing between cards
+    const center = getCenterPosition()
+    const cardWidth = 300
+    const cardHeight = 200
+    const spacing = 50
     
-    // console.log('🎨 getDesignCardPosition called:', { index })
+    const cardsPerRow = Math.floor((canvasSize.width * 0.8) / (cardWidth + spacing))
+    const row = Math.floor(index / cardsPerRow)
+    const col = index % cardsPerRow
     
-    // Simple linear progression: each card to the right of the previous
-    const x = centerPos.x + (index * (cardWidth + cardSpacing))
-    const y = centerPos.y // Small vertical offset to avoid perfect alignment
-    
-    // console.log('🎨 Positioning card', index, ':', { x, y })
-    return { x, y }
-  }
-
-  const handleGenerateUICode = async (design) => {
-    console.log('🎨 Starting UI code generation for design:', design)
-    
-    // Check if design has screens
-    const screensToUse = design.screens || []
-    if (!screensToUse || screensToUse.length === 0) {
-      alert('No screens available for UI code generation')
-      return
-    }
-
-    // Set loading state
-    setGeneratingDesignId(design.id)
-
-    try {
-      // Import the generation service
-      const { genUICodesStreaming } = await import('../services/generationService')
-      
-      // Generate UI codes
-      const screenDescriptions = screensToUse.map(screen => {
-        if (typeof screen === 'string') {
-          return { screen_specification: screen }
-        }
-        return screen
-      })
-      
-      const generatedUICodes = await genUICodesStreaming({
-        screenDescriptions: screenDescriptions,
-        critiques: [],
-        onProgress: (codes, index) => {
-          console.log(`📝 Progress: Screen ${index + 1} code generated`)
-        }
-      })
-
-      console.log('✅ UI code generation completed:', generatedUICodes)
-      
-      // Update the design object with the generated UI codes
-      if (generatedUICodes && generatedUICodes.length > 0) {
-        const updatedDesign = {
-          ...design,
-          screens: screensToUse.map((screen, index) => ({
-            ...screen,
-            ui_code: generatedUICodes[index] || ''
-          }))
-        }
-        
-        console.log('🎨 Updated design with UI codes:', {
-          designId: updatedDesign.id,
-          screensCount: updatedDesign.screens?.length || 0,
-          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0,
-          uiCodesSnippets: updatedDesign.screens?.map(screen => 
-            screen.ui_code ? screen.ui_code.substring(0, 50) + '...' : 'N/A'
-          ) || []
-        })
-        
-        // Update the design in the parent component
-        if (onDesignUpdate) {
-          console.log('📊 Calling onDesignUpdate with updated design')
-          onDesignUpdate(updatedDesign)
-        }
-        
-        // Open the UIView with the updated design
-        setSelectedDesign(updatedDesign)
-        setUiViewOpen(true)
-      } else {
-        throw new Error('No UI codes were generated')
-      }
-    } catch (error) {
-      console.error('❌ Error generating UI codes:', error)
-      alert(`Failed to generate UI codes: ${error.message}`)
-    } finally {
-      // Clear loading state
-      setGeneratingDesignId(null)
+    return {
+      x: center.x + (col - cardsPerRow / 2) * (cardWidth + spacing),
+      y: center.y + (row - 2) * (cardHeight + spacing)
     }
   }
 
@@ -322,9 +261,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
                 index={index}
                 position={position}
                 zoom={zoom}
-                generatingDesignId={generatingDesignId}
                 onOpenUIView={handleOpenUIView}
-                onGenerateUICode={handleGenerateUICode}
                 onRemoveDesignCard={onRemoveDesignCard}
                 onPositionChange={handleCardPositionChange}
               />
