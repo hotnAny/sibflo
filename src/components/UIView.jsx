@@ -337,8 +337,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId }) => {
         <div className="ui-view-fullscreen">
           <div className="ui-view-fullscreen-header">
             <button className="ui-view-back-btn" onClick={handleBackToGrid}>
-              <ArrowLeft size={16} />
-              Back to Grid
+              <ArrowLeft size={20} />
             </button>
             <h2>{screenTitle}</h2>
             <button className="ui-view-close" onClick={onClose}>

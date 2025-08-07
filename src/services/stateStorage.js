@@ -69,6 +69,7 @@ class StateStorage {
         position: state.position,
         uiViewOpen: state.uiViewOpen,
         selectedDesign: state.selectedDesign,
+        cardPositions: state.cardPositions,
         timestamp: Date.now()
       }
       localStorage.setItem(STORAGE_KEYS.CANVAS_STATE, JSON.stringify(canvasState))
@@ -91,7 +92,8 @@ class StateStorage {
           zoom: canvasState.zoom ?? 1,
           position: canvasState.position ?? { x: 0, y: 0 },
           uiViewOpen: canvasState.uiViewOpen ?? false,
-          selectedDesign: canvasState.selectedDesign ?? null
+          selectedDesign: canvasState.selectedDesign ?? null,
+          cardPositions: canvasState.cardPositions ?? {}
         }
       }
     } catch (error) {

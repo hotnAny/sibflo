@@ -1,3 +1,8 @@
+
+Summarize changes and git commit them
+
+-----
+
 Create a react project (Figma style UI) that consists of
 - a main canvas (similar to Figma) 
 - a auto-hide left-aligned side panel for input a form of information
@@ -28,16 +33,13 @@ Adjust the slider style based on the screenshot:
 - add some bottom padding to the slider container
 - each design option can fit in two lines
 
-----
 
 Do not display or initiate the floating slider widget until a design space is created or restored, especially upon refreshing the page. 
 
-
-
-{
-    "input": {
-        "designParameters": "How do we help parents find and choose activities that fit their needs and their child's interests?: Structured Planning, How do we present the activities themselves to make them appealing and understandable to parents?: Social Inspiration, How do we help parents remember and reuse successful activities from previous weekends?: Nostalgic Review"
-    }
-}
+----
 
 each design card's header is at most two lines of text; truncate it otherwise
+
+Arrange the design options vertically instead of horizontally
+
+Move the gen ui code button from the design card to the uiview

@@ -4,7 +4,7 @@ import { genOverallDesigns, genScreenDescriptions } from '../services/generation
 // import { stateStorage } from '../services/stateStorage'
 import './FloatingSliders.css'
 
-const FloatingSliders = ({ sliders, onUpdateSlider, onRemoveSlider, onDesignCreated, currentTrialId }) => {
+const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTrialId }) => {
   const [draggedSlider, setDraggedSlider] = useState(null)
   const [isCreatingDesign, setIsCreatingDesign] = useState(false)
   const [selectedSliders, setSelectedSliders] = useState(new Set())

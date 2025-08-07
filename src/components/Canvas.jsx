@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { ZoomIn, ZoomOut, Move, X, Code, Eye, Loader2, Trash2 } from 'lucide-react'
 import UIView from './UIView'
+import Card from './Card'
 import { stateStorage } from '../services/stateStorage'
 import './Canvas.css'
 
@@ -17,6 +17,10 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   const [uiViewOpen, setUiViewOpen] = useState(false)
   const [selectedDesign, setSelectedDesign] = useState(null)
   const [generatingDesignId, setGeneratingDesignId] = useState(null)
+  
+  // State for card positions
+  const [cardPositions, setCardPositions] = useState({})
+  
   const canvasRef = useRef(null)
 
   // Load canvas state from localStorage on component mount
@@ -27,7 +31,9 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
       setPosition(savedState.position)
       setUiViewOpen(savedState.uiViewOpen)
       setSelectedDesign(savedState.selectedDesign)
-      // console.log('🔄 Canvas state restored from localStorage')
+      if (savedState.cardPositions) {
+        setCardPositions(savedState.cardPositions)
+      }
     }
     // Mark state as loaded to enable saving
     setIsCanvasStateLoaded(true)
@@ -44,10 +50,27 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
       zoom,
       position,
       uiViewOpen,
-      selectedDesign
+      selectedDesign,
+      cardPositions
     }
     stateStorage.saveCanvasState(currentState)
-  }, [isCanvasStateLoaded, zoom, position, uiViewOpen, selectedDesign])
+  }, [isCanvasStateLoaded, zoom, position, uiViewOpen, selectedDesign, cardPositions])
+
+  // Clean up card positions when cards are removed
+  useEffect(() => {
+    if (isCanvasStateLoaded) {
+      const currentCardIds = designCards.map((design, index) => design.id || index)
+      setCardPositions(prev => {
+        const cleanedPositions = {}
+        currentCardIds.forEach(cardId => {
+          if (prev[cardId]) {
+            cleanedPositions[cardId] = prev[cardId]
+          }
+        })
+        return cleanedPositions
+      })
+    }
+  }, [designCards, isCanvasStateLoaded])
 
   const handleWheel = (e) => {
     e.preventDefault()
@@ -85,19 +108,6 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     setIsDragging(false)
   }
 
-  // const handleZoomIn = () => {
-  //   setZoom(Math.min(3, zoom * 1.2))
-  // }
-
-  // const handleZoomOut = () => {
-  //   setZoom(Math.max(0.1, zoom / 1.2))
-  // }
-
-  // const handleResetView = () => {
-  //   setZoom(0.1)
-  //   setPosition({ x: 0, y: 0 })
-  // }
-
   // Calculate center position for design cards
   const getCenterPosition = () => {
     const cardWidth = 300 // Width of design card
@@ -117,7 +127,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     
     // Simple linear progression: each card to the right of the previous
     const x = centerPos.x + (index * (cardWidth + cardSpacing))
-    const y = centerPos.y + (index * 20) // Small vertical offset to avoid perfect alignment
+    const y = centerPos.y // Small vertical offset to avoid perfect alignment
     
     // console.log('🎨 Positioning card', index, ':', { x, y })
     return { x, y }
@@ -214,6 +224,13 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     setSelectedDesign(null)
   }
 
+  const handleCardPositionChange = (cardId, newPosition) => {
+    setCardPositions(prev => ({
+      ...prev,
+      [cardId]: newPosition
+    }))
+  }
+
   // Update canvas size when component mounts or window resizes
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -263,7 +280,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
         document.removeEventListener('mouseup', handleMouseUp)
       }
     }
-  }, [isDragging, dragStart])
+  }, [isDragging])
 
   return (
     <div className="canvas-container">
@@ -293,108 +310,27 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
         {/* Design Cards */}
         <div className="canvas-content">
           {designCards.map((design, index) => {
-            const position = getDesignCardPosition(index)
+            const defaultPosition = getDesignCardPosition(index)
+            const cardId = design.id || index
+            const savedPosition = cardPositions[cardId]
+            const position = savedPosition || defaultPosition
             
             return (
-              <div 
-                key={design.id || index}
-                className="design-card"
-                style={{ 
-                  left: `${position.x}px`, 
-                  top: `${position.y}px` 
-                }}
-              >
-                <div className="design-card-header">
-                  <h3 className="design-card-title">
-                    {design.design_name || design.name || `Design ${index + 1}`}
-                  </h3>
-                </div>
-                <div className="design-card-content">
-                  <p className="design-card-description">
-                    {design.core_concept || design.description || 'No description available'}
-                  </p>
-                  {design.key_characteristics && (
-                    <div className="design-card-characteristics">
-                      <h4>Key Characteristics:</h4>
-                      <ul>
-                        {Array.isArray(design.key_characteristics) 
-                          ? design.key_characteristics.map((char, i) => (
-                              <li key={i}>{char}</li>
-                            ))
-                          : <li>{design.key_characteristics}</li>
-                        }
-                      </ul>
-                    </div>
-                  )}
-                  {design.rationale && (
-                    <div className="design-card-rationale">
-                      <h4>Rationale:</h4>
-                      <p>{design.rationale}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="design-card-footer">
-                  <div className="design-card-actions">
-                    <button 
-                      className="control-btn"
-                      onClick={() => handleOpenUIView(design)}
-                      title="View UI"
-                    >
-                      <Eye size={14} />
-                    </button>
-                    <button 
-                      className="control-btn"
-                      onClick={() => handleGenerateUICode(design)}
-                      title="Generate UI Code"
-                      disabled={generatingDesignId === design.id}
-                    >
-                      {generatingDesignId === design.id ? (
-                        <Loader2 size={14} className="loading-spinner" />
-                      ) : (
-                        <Code size={14} />
-                      )}
-                    </button>
-                    {onRemoveDesignCard && (
-                      <button 
-                        className="control-btn"
-                        onClick={() => onRemoveDesignCard(design.id || index)}
-                        title="Remove design"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <Card
+                key={cardId}
+                design={design}
+                index={index}
+                position={position}
+                generatingDesignId={generatingDesignId}
+                onOpenUIView={handleOpenUIView}
+                onGenerateUICode={handleGenerateUICode}
+                onRemoveDesignCard={onRemoveDesignCard}
+                onPositionChange={handleCardPositionChange}
+              />
             )
           })}
-          
-          {/* Sample content */}
-          {/* <div className="sample-rectangle" style={{ left: '100px', top: '300px' }}>
-            <div className="rectangle-label">Rectangle 1</div>
-          </div>
-          <div className="sample-circle" style={{ left: '300px', top: '400px' }}>
-            <div className="circle-label">Circle 1</div>
-          </div>
-          <div className="sample-text" style={{ left: '200px', top: '600px' }}>
-            Sample Text Element
-          </div> */}
         </div>
       </div>
-
-      {/* Canvas controls */}
-      {/* <div className="canvas-controls">
-        <button onClick={handleZoomIn} className="control-btn">
-          <ZoomIn size={16}/>
-        </button>
-        <button onClick={handleZoomOut} className="control-btn">
-          <ZoomOut size={16} />
-        </button>
-        <button onClick={handleResetView} className="control-btn">
-          <Move size={16} />
-        </button>
-        <div className="zoom-level">{Math.round(zoom * 100)}%</div>
-      </div> */}
 
       {/* UIView - UI Code Generation */}
       {uiViewOpen && selectedDesign && (
