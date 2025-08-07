@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
   APP_STATE: 'sibflo_app_state',
   CANVAS_STATE: 'sibflo_canvas_state',
   SLIDERS_STATE: 'sibflo_sliders_state',
-  UIVIEW_STATE: 'sibflo_uiview_state'
+  UIVIEW_STATE: 'sibflo_uiview_state',
+  LEFT_PANEL_STATE: 'sibflo_left_panel_state'
 }
 
 class StateStorage {
@@ -193,6 +194,62 @@ class StateStorage {
     return {
       selectedTask: null,
       selectedScreen: null
+    }
+  }
+
+  /**
+   * Save left panel form state to localStorage
+   */
+  saveLeftPanelState(state) {
+    try {
+      const leftPanelState = {
+        formData: {
+          context: state.context,
+          user: state.user,
+          goal: state.goal,
+          tasks: state.tasks,
+          examples: state.examples,
+          comments: state.comments
+        },
+        timestamp: Date.now()
+      }
+      localStorage.setItem(STORAGE_KEYS.LEFT_PANEL_STATE, JSON.stringify(leftPanelState))
+      console.log('💾 Left panel state saved to localStorage')
+    } catch (error) {
+      console.error('❌ Failed to save left panel state:', error)
+    }
+  }
+
+  /**
+   * Load left panel form state from localStorage
+   */
+  loadLeftPanelState() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.LEFT_PANEL_STATE)
+      if (stored) {
+        const leftPanelState = JSON.parse(stored)
+        console.log('📂 Left panel state loaded from localStorage')
+        return {
+          context: leftPanelState.formData.context ?? '',
+          user: leftPanelState.formData.user ?? '',
+          goal: leftPanelState.formData.goal ?? '',
+          tasks: leftPanelState.formData.tasks ?? [],
+          examples: leftPanelState.formData.examples ?? [],
+          comments: leftPanelState.formData.comments ?? ''
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load left panel state:', error)
+    }
+    
+    // Return default state if loading fails
+    return {
+      context: '',
+      user: '',
+      goal: '',
+      tasks: [],
+      examples: [],
+      comments: ''
     }
   }
 

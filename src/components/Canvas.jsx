@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import UIView from './UIView'
 import Card from './Card'
+import { Maximize } from 'lucide-react'
 import { stateStorage } from '../services/stateStorage'
 import './Canvas.css'
 
@@ -19,6 +20,8 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
   
   // State for card positions
   const [cardPositions, setCardPositions] = useState({})
+  
+
   
   const canvasRef = useRef(null)
 
@@ -81,14 +84,15 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
                             target.classList.contains('design-card-footer')
     
     if (isOverDesignCard) {
-      // Don't prevent default - let the card content scroll naturally
+      // Don't prevent default - let the card/shape content scroll naturally
       return
     }
     
     // Only zoom if scrolling over the canvas background
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
-    const newZoom = Math.max(0.1, Math.min(3, zoom * delta))
+    const newZoom = Math.max(0.5, Math.min(2, zoom * delta))
+    console.log('Current zoom factor:', newZoom)
     setZoom(newZoom)
   }
 
@@ -96,13 +100,20 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     // Enable panning with left mouse button, middle mouse button, or left + Alt
     if (e.button === 0 || e.button === 1 || (e.button === 0 && e.altKey)) {
       // Only start dragging if clicking on the canvas background (not on design cards or other elements)
-      if (e.target === e.currentTarget || e.target.classList.contains('canvas-grid') || e.target.classList.contains('grid-pattern')) {
-        setIsDragging(true)
-        setDragStart({
-          x: e.clientX - position.x,
-          y: e.clientY - position.y
-        })
-        e.preventDefault() // Prevent text selection during drag
+      const isOverDesignCard = e.target.closest('.design-card')
+      
+      if (e.target === e.currentTarget || 
+          e.target.classList.contains('canvas-grid') || 
+          e.target.classList.contains('grid-pattern')) {
+        // Only start dragging if not over a card
+        if (!isOverDesignCard) {
+          setIsDragging(true)
+          setDragStart({
+            x: e.clientX - position.x,
+            y: e.clientY - position.y
+          })
+          e.preventDefault() // Prevent text selection during drag
+        }
       }
     }
   }
@@ -178,6 +189,12 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     }))
   }
 
+  const handleResetCanvas = () => {
+    setZoom(1)
+    setPosition({ x: 0, y: 0 })
+  }
+
+
   // Update canvas size when component mounts or window resizes
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -185,9 +202,9 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
       
-      // Calculate 10x viewport size while maintaining aspect ratio
-      const canvasWidth = viewportWidth * 10
-      const canvasHeight = viewportHeight * 10
+      // Calculate 3x viewport size while maintaining aspect ratio
+      const canvasWidth = viewportWidth * 3
+      const canvasHeight = viewportHeight * 3
       
       setCanvasSize({
         width: canvasWidth,
@@ -276,7 +293,18 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
             )
           })}
         </div>
+
+
       </div>
+
+      {/* Reset Canvas Button */}
+      <button 
+        className="reset-canvas-button"
+        onClick={handleResetCanvas}
+        title="Reset canvas position and zoom"
+      >
+        <Maximize size={18} />
+      </button>
 
       {/* UIView - UI Code Generation */}
       {uiViewOpen && selectedDesign && (

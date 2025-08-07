@@ -479,10 +479,10 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             </div>
             
             <div className="ui-view-fullscreen-panel">
-              <h3>User Interaction</h3>
-              <div className="interaction-description">
+              <h3>{getScreenInteractionDescription(screen)}</h3>
+              {/* <div className="interaction-description">
                 <p>{getScreenInteractionDescription(screen)}</p>
-              </div>
+              </div> */}
               
               {/* Navigation buttons */}
               {showNavigation && (

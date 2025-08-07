@@ -6,24 +6,16 @@ import { setGeminiModels } from '../services/chains'
 import { trialLogger } from '../services/trialLogger'
 import './LeftPanel.css'
 
-const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
+const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormDataChange }) => {
   const [activeTab, setActiveTab] = useState('design-space')
-  const [formData, setFormData] = useState({
-    context: 'As a parent of a toddler, I often struggle to think of what to do over the weekend with my child. I don\'t',
-    user: 'A busy parent who is often too busy during the week to plan weekend activities for their child',
-    goal: 'Have fun, engaging, and educational activities with my child over the weekend.',
-    tasks: ['Plan a weekend of activities for my child', 'Review activities in past weekends'],
-    examples: [],
-    comments: ''
-  })
   const [apiKey, setApiKey] = useState('')
   const [isApiKeySet, setIsApiKeySet] = useState(false)
   const [apiKeySaved, setApiKeySaved] = useState(false)
-  const [selectedModel, setSelectedModel] = useState('modelFlash')
-  const [prompt, setPrompt] = useState('')
-  const [response, setResponse] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  // const [selectedModel, setSelectedModel] = useState('modelFlash')
+  // const [prompt, setPrompt] = useState('')
+  // const [response, setResponse] = useState('')
+  // const [isLoading, setIsLoading] = useState(false)
+  // const [error, setError] = useState('')
   const [isGeneratingDesignSpace, setIsGeneratingDesignSpace] = useState(false)
 
   // Load API key from localStorage on component mount
@@ -44,10 +36,10 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
+    onFormDataChange({
+      ...formData,
       [name]: value
-    }))
+    })
   }
 
   const handleApiKeyChange = (e) => {
@@ -65,13 +57,12 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
       try {
         modelService.initialize(apiKey.trim())
         setGeminiModels(apiKey.trim())
-        setError('')
         // Show success message and reload the page after 1 second
         setTimeout(() => {
           window.location.reload()
         }, 1000)
-      } catch (error) {
-        setError('Failed to initialize model service: ' + error.message)
+      } catch (err) {
+        console.error('Failed to initialize model service:', err)
       }
       // Clear the saved message after 3 seconds (but page will reload before this)
       setTimeout(() => setApiKeySaved(false), 3000)
@@ -84,114 +75,114 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
     setIsApiKeySet(false)
     setApiKeySaved(false)
     modelService.clear()
-    setError('')
+    // setError('')
     // Reload the page after clearing the API key
     setTimeout(() => {
       window.location.reload()
     }, 500)
   }
 
-  const handleModelSubmit = async (e) => {
-    e.preventDefault()
-    if (!prompt.trim()) return
+  // const handleModelSubmit = async (e) => {
+  //   e.preventDefault()
+  //   if (!prompt.trim()) return
 
-    setIsLoading(true)
-    setError('')
-    setResponse('')
+  //   setIsLoading(true)
+  //   setError('')
+  //   setResponse('')
 
-    try {
-      if (!modelService.isInitialized()) {
-        throw new Error('Model service not initialized. Please set your API key first.')
-      }
+  //   try {
+  //     if (!modelService.isInitialized()) {
+  //       throw new Error('Model service not initialized. Please set your API key first.')
+  //     }
 
-      const result = await modelService.generateContent(selectedModel, prompt.trim())
-      setResponse(result.text)
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  //     const result = await modelService.generateContent(selectedModel, prompt.trim())
+  //     setResponse(result.text)
+  //   } catch (error) {
+  //     setError(error.message)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
-  const handleStreamSubmit = async (e) => {
-    e.preventDefault()
-    if (!prompt.trim()) return
+  // const handleStreamSubmit = async (e) => {
+  //   e.preventDefault()
+  //   if (!prompt.trim()) return
 
-    setIsLoading(true)
-    setError('')
-    setResponse('')
+  //   setIsLoading(true)
+  //   setError('')
+  //   setResponse('')
 
-    try {
-      if (!modelService.isInitialized()) {
-        throw new Error('Model service not initialized. Please set your API key first.')
-      }
+  //   try {
+  //     if (!modelService.isInitialized()) {
+  //       throw new Error('Model service not initialized. Please set your API key first.')
+  //     }
 
-      await modelService.generateContentStream(
-        selectedModel,
-        prompt.trim(),
-        (chunk, fullText) => {
-          setResponse(fullText)
-        }
-      )
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  //     await modelService.generateContentStream(
+  //       selectedModel,
+  //       prompt.trim(),
+  //       (chunk, fullText) => {
+  //         setResponse(fullText)
+  //       }
+  //     )
+  //   } catch (error) {
+  //     setError(error.message)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
   const addTask = () => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: [...prev.tasks, '']
-    }))
+    onFormDataChange({
+      ...formData,
+      tasks: [...formData.tasks, '']
+    })
   }
 
   const updateTask = (index, value) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.map((task, i) => i === index ? value : task)
-    }))
+    onFormDataChange({
+      ...formData,
+      tasks: formData.tasks.map((task, i) => i === index ? value : task)
+    })
   }
 
   const removeTask = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.filter((_, i) => i !== index)
-    }))
+    onFormDataChange({
+      ...formData,
+      tasks: formData.tasks.filter((_, i) => i !== index)
+    })
   }
 
   const addExample = () => {
-    setFormData(prev => ({
-      ...prev,
-      examples: [...prev.examples, '']
-    }))
+    onFormDataChange({
+      ...formData,
+      examples: [...formData.examples, '']
+    })
   }
 
   const updateExample = (index, value) => {
-    setFormData(prev => ({
-      ...prev,
-      examples: prev.examples.map((example, i) => i === index ? value : example)
-    }))
+    onFormDataChange({
+      ...formData,
+      examples: formData.examples.map((example, i) => i === index ? value : example)
+    })
   }
 
   const removeExample = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      examples: prev.examples.filter((_, i) => i !== index)
-    }))
+    onFormDataChange({
+      ...formData,
+      examples: formData.examples.filter((_, i) => i !== index)
+    })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isApiKeySet) {
-      setError('Please set your API key first.')
+      // setError('Please set your API key first.')
       return
     }
 
     setIsGeneratingDesignSpace(true)
-    setError('')
-    setResponse('')
+    // setError('')
+    // setResponse('')
 
     try {
       if (!modelService.isInitialized()) {
@@ -245,12 +236,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
           onDesignSpaceGenerated(newSliders, trialId)
         }
 
-        setResponse(`Generated ${newSliders.length} design space dimensions:\n${JSON.stringify(result.designSpace, null, 2)}`)
+        // setResponse(`Generated ${newSliders.length} design space dimensions:\n${JSON.stringify(result.designSpace, null, 2)}`)
       } else {
         throw new Error('Invalid design space result')
       }
     } catch (error) {
-      setError(error.message)
+      // setError(error.message)
+      console.error('Error generating design space:', error)
     } finally {
       setIsGeneratingDesignSpace(false)
     }
@@ -269,7 +261,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
               className={`tab ${activeTab === 'design-space' ? 'active' : ''}`} 
               onClick={() => setActiveTab('design-space')}
             >
-              Design Space
+              Input
             </button>
             <button 
               className={`tab ${activeTab === 'gemini' ? 'active' : ''}`} 
@@ -435,92 +427,9 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated }) => {
                       </button>
                     </div>
                   )}
-                  <p className="help-text">
-                    Get your API key from the{' '}
-                    <a 
-                      href="https://makersuite.google.com/app/apikey" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="help-link"
-                    >
-                      Google AI Studio
-                    </a>
-                  </p>
                 </div>
 
-                {/* Model Selection */}
-                {isApiKeySet && (
-                  <div className="form-section">
-                    <label className="section-label">Model</label>
-                    <select
-                      value={selectedModel}
-                      onChange={(e) => setSelectedModel(e.target.value)}
-                      className="form-input"
-                    >
-                      {Object.keys(GEMINI_MODELS).map(modelKey => (
-                        <option key={modelKey} value={modelKey}>
-                          {GEMINI_MODELS[modelKey].displayName} - {GEMINI_MODELS[modelKey].description}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Prompt Input */}
-                {isApiKeySet && (
-                  <div className="form-section">
-                    <label className="section-label">Prompt</label>
-                    <textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      className="form-textarea"
-                      placeholder="Enter your prompt..."
-                      rows="4"
-                    />
-                    <div className="submit-buttons">
-                      <button
-                        type="button"
-                        onClick={handleModelSubmit}
-                        className="submit-btn"
-                        disabled={!prompt.trim() || isLoading}
-                      >
-                        {isLoading ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
-                        {isLoading ? 'Generating...' : 'Generate'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleStreamSubmit}
-                        className="submit-btn secondary"
-                        disabled={!prompt.trim() || isLoading}
-                      >
-                        {isLoading ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
-                        {isLoading ? 'Streaming...' : 'Stream'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Error Display */}
-                {error && (
-                  <div className="error-message">
-                    {error}
-                  </div>
-                )}
-
-                {/* Response Display */}
-                {response && (
-                  <div className="form-section">
-                    <label className="section-label">Response</label>
-                    <div className="response-section">
-                      <textarea
-                        value={response}
-                        readOnly
-                        className="form-textarea"
-                        rows="8"
-                      />
-                    </div>
-                  </div>
-                )}
+                
               </div>
             </>
           )}

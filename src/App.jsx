@@ -16,6 +16,14 @@ function App() {
   const [designCards, setDesignCards] = useState([])
   const [currentTrialId, setCurrentTrialId] = useState(null)
   const [shouldClosePanel, setShouldClosePanel] = useState(false)
+  const [leftPanelFormData, setLeftPanelFormData] = useState({
+    context: '',
+    user: '',
+    goal: '',
+    tasks: [],
+    examples: [],
+    comments: ''
+  })
 
   // Helper function to determine if we have a valid design space
   const hasValidDesignSpace = useCallback(() => {
@@ -43,6 +51,14 @@ function App() {
       setCurrentTrialId(savedState.currentTrialId)
       console.log('🔄 App state restored from localStorage')
     }
+
+    // Load left panel form data
+    const savedFormData = stateStorage.loadLeftPanelState()
+    if (savedFormData) {
+      setLeftPanelFormData(savedFormData)
+      console.log('🔄 Left panel form data restored from localStorage')
+    }
+
     // Mark state as loaded to enable saving
     setIsStateLoaded(true)
   }, [])
@@ -64,8 +80,17 @@ function App() {
     stateStorage.saveAppState(currentState)
   }, [isStateLoaded, leftPanelOpen, sliders, designCards, currentTrialId, hasValidDesignSpace])
 
+  // Save left panel form data whenever it changes
+  useEffect(() => {
+    if (!isStateLoaded) return
+    stateStorage.saveLeftPanelState(leftPanelFormData)
+  }, [isStateLoaded, leftPanelFormData])
+
   const toggleLeftPanel = () => setLeftPanelOpen(!leftPanelOpen)
 
+  const handleFormDataChange = (newFormData) => {
+    setLeftPanelFormData(newFormData)
+  }
 
 
   const updateSlider = (id, value) => {
@@ -164,6 +189,8 @@ function App() {
         isOpen={leftPanelOpen}
         onToggle={toggleLeftPanel}
         onDesignSpaceGenerated={handleDesignSpaceGenerated}
+        formData={leftPanelFormData}
+        onFormDataChange={handleFormDataChange}
       />
       
       {hasValidDesignSpace() && (

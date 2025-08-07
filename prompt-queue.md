@@ -43,3 +43,16 @@ Next to the gen ui button, let the user choose fast vs. high quality: fast uses 
 
 
 
+(Design card initial pos)
+
+Disable closing uiview while generating ui
+
+limit canvas zoom factor to no more than 2 and no smaller than 0.25
+
+Screen consistency
+
+Regen individual screen
+
+? Necessary
+- add comment to each ui screen
+- add design dim

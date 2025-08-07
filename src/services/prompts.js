@@ -47,7 +47,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 // );
 
 export const promptOverallDesign = PromptTemplate.fromTemplate(
-  `Analyze the following information and follow the specific design parameters to generate 1 distinct high-level design concept for a desktop application that can support the user to accomplish their goal by performing the tasks.
+  `Analyze the following information and follow the specific design parameters to generate 1 distinct high-level design concept that can support the user to accomplish their goal by performing the tasks.
 
   Design Parameters: {designParameters}
 
@@ -396,7 +396,6 @@ SCREEN DESCRIPTION:
 MUST‑HAVE ELEMENTS & BEHAVIORS:
 - Include every UI element listed in “elements”.
 - Implement every behavior in “functionality”.
-- Desktop‑oriented layout.
 
 STYLE & FORMAT RULES:
 1. Root <svg> must include a proper viewBox.
@@ -454,7 +453,6 @@ export const promptSVGCodeRevision = PromptTemplate.fromTemplate(
   - Keep the same visual style and approach
   - Only modify elements that are specifically mentioned in the critiques
   - Maintain all existing functionality and elements not mentioned in critiques
-  - The UI should still be for a desktop application
   - The SVG should still resemble human hand-drawn wireframes
   - Use Comic Sans MS as the font
   - Only use gray-scale colors
@@ -486,7 +484,7 @@ export const promptCritiqueToChanges = PromptTemplate.fromTemplate(
   {critiques}
 
   Context:
-  The target is SVG code that represents a wireframe UI mockup. This is a hand-drawn style wireframe for a desktop application interface.
+  The target is SVG code that represents a wireframe UI mockup. This is a hand-drawn style wireframe.
 
   Requirements:
   - For each critique, identify the specific UI element using the ui_element information
@@ -547,7 +545,6 @@ export const promptApplyChangesToSVG = PromptTemplate.fromTemplate(
   - Preserve all other elements and their properties exactly as they are
   - Maintain the existing design structure and layout
   - Keep the same visual style and approach
-  - The UI should still be for a desktop application
   - The SVG should still resemble human hand-drawn wireframes
   - Use Comic Sans MS as the font
   - Only use gray-scale colors
