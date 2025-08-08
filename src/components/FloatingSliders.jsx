@@ -154,28 +154,23 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
       const designParametersStructured = generateDesignParameters()
       const designParametersForLogging = generateDesignParametersForLogging()
       
-      // Convert structured format to string for genOverallDesigns compatibility
-      // const designParametersString = designParametersStructured.map(param => 
-      //   `${param.dimension_description}: ${param.selected_option}`
-      // ).join(', ')
-      
-      // console.log('🎨 Creating design with structured parameters:', designParametersStructured)
-      // console.log('🎨 Creating design with string parameters:', designParametersString)
-      
       // Log the structure for debugging
-      if (designParametersStructured.length > 0) {
-        console.log('📋 Structured parameters breakdown:')
-        designParametersStructured.forEach((param, index) => {
-          console.log(`  ${index + 1}. Dimension: "${param.dimension_description}"`)
-          console.log(`     Selected Option: "${param.selected_option}"`)
-          console.log(`     Option Description: "${param.option_description}"`)
-        })
-      }
+      // if (designParametersStructured.length > 0) {
+      //   console.log('📋 Structured parameters breakdown:')
+      //   designParametersStructured.forEach((param, index) => {
+      //     console.log(`  ${index + 1}. Dimension: "${param.dimension_description}"`)
+      //     console.log(`     Selected Option: "${param.selected_option}"`)
+      //     console.log(`     Option Description: "${param.option_description}"`)
+      //   })
+      // }
       
       const designs = await genOverallDesigns({ designParameters: designParametersStructured })
       
       if (designs && Array.isArray(designs) && designs.length > 0) {
-        const design = designs[0] // Take the first design
+        // Randomly pick one of the designs
+        const randomIndex = Math.floor(Math.random() * designs.length)
+        const design = designs[randomIndex]
+        console.log(`🎲 Randomly selected design ${randomIndex + 1} of ${designs.length} available designs`)
         
         // Generate screen descriptions and task screen mapping
         let screenDescriptions = []

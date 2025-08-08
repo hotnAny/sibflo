@@ -146,7 +146,8 @@ export class TrialLogger {
           hasScreens: !!updatedDesign.screens,
           screensCount: updatedDesign.screens?.length || 0,
           hasUICodes: updatedDesign.screens?.some(screen => screen.ui_code) || false,
-          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0
+          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0,
+          favorite: updatedDesign.favorite
         })
         
         trial.designs[designIndex] = {

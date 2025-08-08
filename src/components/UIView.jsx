@@ -12,6 +12,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
   const [selectedDesign, setSelectedDesign] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [qualityMode, setQualityMode] = useState('fast') // 'fast' or 'high'
+  const [cardZIndices, setCardZIndices] = useState({}) // Track z-index for each card
 
   // Internal function to generate UI codes and update design
   const generateUICodes = async (designToUpdate, qualityModeToUse = 'fast') => {
@@ -363,6 +364,41 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
   }
 
   const handleScreenClick = (screen, index) => {
+    // Generate a unique card ID for z-index management
+    const cardId = screen.screen_id || screen.id || `screen-${index}`
+    
+    setCardZIndices(prev => {
+      const newZIndices = { ...prev }
+      
+      // If this card is already selected (has a z-index), deselect it
+      if (newZIndices[cardId] !== undefined) {
+        console.log(`🎯 Deselecting card: ${cardId}`)
+        delete newZIndices[cardId]
+        console.log('📊 Updated z-indices:', newZIndices)
+        return newZIndices
+      }
+      
+      // If selecting a new card
+      console.log(`🎯 Selecting card: ${cardId}`)
+      console.log('📊 Previous z-indices:', newZIndices)
+      
+      // 1. Reduce z-index of all other cards by 1
+      Object.keys(newZIndices).forEach(id => {
+        newZIndices[id] = Math.max(0, newZIndices[id] - 1)
+      })
+      
+      // 2. Find the maximum z-index among remaining cards
+      const maxZIndex = Object.values(newZIndices).length > 0 
+        ? Math.max(...Object.values(newZIndices)) 
+        : 0
+      
+      // 3. Set the selected card's z-index to max + 1
+      newZIndices[cardId] = maxZIndex + 1
+      
+      console.log('📊 Updated z-indices:', newZIndices)
+      return newZIndices
+    })
+    
     setSelectedScreen({ screen, index })
   }
 
@@ -377,7 +413,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
     }
     
     // Fallback to interaction_description or default message
-    return screen?.interaction_description || "User can interact with this screen to complete the task."
+    return screen?.interaction_description || "Select a task to see how a user can interact with this screen"
   }
 
   // const getTaskDescription = (taskIndex) => {
@@ -465,8 +501,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             <button className="ui-view-back-btn" onClick={handleBackToGrid}>
               <ArrowLeft size={20} />
             </button>
-            <h3>{screenTitle}</h3>
-            <button className="ui-view-close" onClick={onClose}>
+            
+            <button className="ui-view-close" onClick={onClose} disabled={isGenerating}>
               <X size={20} />
             </button>
           </div>
@@ -479,7 +515,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             </div>
             
             <div className="ui-view-fullscreen-panel">
-              <h3>{getScreenInteractionDescription(screen)}</h3>
+              <h2>{screenTitle}</h2>
+              <h4>{getScreenInteractionDescription(screen)}</h4>
               {/* <div className="interaction-description">
                 <p>{getScreenInteractionDescription(screen)}</p>
               </div> */}
@@ -522,7 +559,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
       <div className="ui-view">
         <div className="ui-view-header">
           <h2>{design?.design_name}</h2>
-          <button className="ui-view-close" onClick={onClose}>
+          <button className="ui-view-close" onClick={onClose} disabled={isGenerating}>
             <X size={20} />
           </button>
         </div>
@@ -565,7 +602,15 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
 
           {/* Main Content - Screen Cards */}
           <div className="ui-view-main">
-            <div className="screen-grid">
+            <div 
+              className="screen-grid"
+              onClick={(e) => {
+                // If clicking on the grid container (not on a card), deselect any selected card
+                if (e.target === e.currentTarget) {
+                  setCardZIndices({}) // Clear all z-indices
+                }
+              }}
+            >
               {(() => {
                 const filteredScreens = getFilteredScreens()
                 console.log('🎨 Rendering filtered screens:', filteredScreens.length, 'for task:', selectedTask)
@@ -595,14 +640,28 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                     
                     console.log(`🎨 Rendering screen: ${screenTitle} (ID: ${screen.screen_id || screen.id}), UI Code snippet:`, screenUICode ? screenUICode.substring(0, 50) + '...' : 'N/A')
                     
+                    // Generate card ID for z-index management
+                    const cardId = screen.screen_id || screen.id || `screen-${originalIndex}`
+                    const cardZIndex = cardZIndices[cardId]
+                    const isSelected = cardZIndex !== undefined // Check if z-index is set
+                    
                     return (
                       <div 
                         key={uniqueKey} 
-                        className="screen-card"
+                        className={`screen-card ${isSelected ? 'screen-card-selected' : ''}`}
                         onClick={() => handleScreenClick(screen, originalIndex)}
+                        style={{ zIndex: cardZIndex || 'auto' }} // Apply z-index or auto if not set
                       >
                         <div className="screen-card-header">
-                          <h4>{filteredIndex + 1}. {screenTitle}</h4>
+                          <h4>
+                            {filteredIndex + 1}. {screenTitle}
+                            {isSelected && (
+                              <>
+                                <span className="selection-indicator">●</span>
+                                <span className="z-index-indicator">z:{cardZIndex}</span>
+                              </>
+                            )}
+                          </h4>
                         </div>
                         <div className="screen-card-content">
                           {screenUICode ? (

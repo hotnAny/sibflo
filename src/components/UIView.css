@@ -16,10 +16,10 @@
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  width: 90vw;
-  max-width: 1200px;
-  height: 80vh;
-  max-height: 800px;
+  width: 95vw;
+  max-width: 1400px;
+  height: 90vh;
+  max-height: 900px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -95,9 +95,16 @@
   transition: all 0.2s ease;
 }
 
-.ui-view-close:hover {
+.ui-view-close:hover:not(:disabled) {
   color: #dc2626;
   transform: scale(1.05);
+}
+
+.ui-view-close:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
 }
 
 /* Generate UI Button - positioned at lower left */
@@ -291,13 +298,27 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
 }
 
 .screen-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+}
+
+.screen-card-selected {
+  position: relative;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.screen-card-selected:hover {
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.4);
+  transform: translateY(-6px);
 }
 
 .screen-card-header {
@@ -311,6 +332,34 @@
   font-size: 16px;
   font-weight: 600;
   color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selection-indicator {
+  color: #3b82f6;
+  font-size: 14px;
+  animation: pulse 2s infinite;
+}
+
+.z-index-indicator {
+  color: #059669;
+  font-size: 12px;
+  font-weight: 500;
+  background: #d1fae5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #10b981;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .screen-card-content {
@@ -463,7 +512,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 32px;
+  padding: 8px 16px;
   border-bottom: 1px solid #e2e8f0;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
@@ -645,7 +694,7 @@
   }
 
   .ui-view-fullscreen-header {
-    padding: 16px 20px;
+    padding: 0px 0px;
   }
 
   .ui-view-fullscreen-header h2 {

@@ -138,13 +138,27 @@ function App() {
     // Add the design to the design cards with the ID from trial logger
     const designWithId = {
       ...design,
-      id: designId || Date.now() // Use trial logger ID if available, otherwise fallback
+      id: designId || Date.now(), // Use trial logger ID if available, otherwise fallback
+      favorite: false // Initialize favorite status
     }
     setDesignCards([...designCards, designWithId])
   }
 
   const handleRemoveDesignCard = (designId) => {
     setDesignCards(designCards.filter(card => card.id !== designId))
+  }
+
+  const handleToggleFavorite = (designId) => {
+    setDesignCards(prevCards => 
+      prevCards.map(card => {
+        if (card.id === designId) {
+          const newFavoriteStatus = !card.favorite
+          console.log('⭐ Toggle favorite for design:', designId, 'New status:', newFavoriteStatus)
+          return { ...card, favorite: newFavoriteStatus }
+        }
+        return card
+      })
+    )
   }
 
   const handleDesignUpdate = (updatedDesign) => {
@@ -156,10 +170,12 @@ function App() {
       uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0
     })
     
-    // Update the design card with the new UI codes
+    // Update the design card with the new UI codes, preserving favorite status
     setDesignCards(prevCards => 
       prevCards.map(card => 
-        card.id === updatedDesign.id ? updatedDesign : card
+        card.id === updatedDesign.id 
+          ? { ...card, ...updatedDesign } // Preserve existing properties including favorite
+          : card
       )
     )
     
@@ -181,6 +197,7 @@ function App() {
       <Canvas 
         designCards={designCards}
         onRemoveDesignCard={handleRemoveDesignCard}
+        onToggleFavorite={handleToggleFavorite}
         onDesignUpdate={handleDesignUpdate}
         currentTrialId={currentTrialId}
       />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Code, Eye, Loader2, Trash2 } from 'lucide-react'
+import { Code, Eye, Loader2, Trash2, Star } from 'lucide-react'
 import './Card.css'
 
 const Card = ({ 
@@ -9,7 +9,8 @@ const Card = ({
   zoom = 1,
   onOpenUIView, 
   onRemoveDesignCard,
-  onPositionChange 
+  onPositionChange,
+  onToggleFavorite
 }) => {
   const [isDraggingCard, setIsDraggingCard] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
@@ -100,6 +101,14 @@ const Card = ({
     return baseTransform
   }
 
+  const handleFavoriteClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (onToggleFavorite) {
+      onToggleFavorite(design.id || index)
+    }
+  }
+
   return (
     <div 
       ref={cardRef}
@@ -117,6 +126,13 @@ const Card = ({
         <h3 className="design-card-title">
           {design.design_name || design.name || `Design ${index + 1}`}
         </h3>
+        <button 
+          className={`favorite-btn ${design.favorite ? 'favorited' : ''}`}
+          onClick={handleFavoriteClick}
+          title={design.favorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <Star size={16} />
+        </button>
       </div>
       <div className="design-card-content">
         <p className="design-card-description">

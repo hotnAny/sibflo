@@ -1,73 +1,16 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 
-// --- Prompt Templates ---
-// Defines the structure and instructions for various LLM interactions.
-
-// export const promptOverallDesign = PromptTemplate.fromTemplate(
-//   `Analyze the following information and follow the specific design parameters to generate 3-5 distinct high-level design concepts for a desktop application that can support the user to accomplish their goal by performing the tasks.
-
-//   Context: {context}
-//   User: {user}
-//   Goal: {goal}
-//   Tasks: {tasks}
-//   Examples: {examples}
-//   User Comments: {userComments}
-//   Design Parameters: {designParameters}
-
-//   Requirements:
-//   - Generate 3-5 distinct high-level design concepts
-//   - Each design should directly address the design parameters
-//   - Use the provided examples as inspiration: analyze each example's description to understand the design approach, interaction pattern, or visual style it represents, then incorporate those insights into your design concepts
-//   - If user comments are provided, carefully consider and incorporate the feedback, preferences, concerns, or suggestions mentioned by users into your design concepts
-//   - If design parameters are provided, incorporate the selected design preferences and constraints into your design concepts
-
-//   Format the output as a JSON array where each design object has these fields:
-//   - design_id: A unique integer identifier
-//   - design_name: A highly-descriptive short sentence for the design: one should be able to understand the design from the name without reading the rest of the design concept
-//   - core_concept: Describing the main design approach---importantly, how it addresses each of the design parameters
-//   - references: optional, only needed if examples were provided, one sentence to describe what you see in the provided examples and how you incorporates them into this design idea
-//   - user_feedback_consideration: optional, only needed if user comments were provided, one sentence to explain how this design addresses or incorporates the user feedback, preferences, or concerns mentioned. 
-
-//   Example format (do not include this in your response):
-//   [
-//     {{
-//       "design_id": 1,
-//       "design_name": "Dashboard-Centric Approach",
-//       "core_concept": "A centralized dashboard that provides quick access to all deployment tools and monitoring features. ... (describe how it addresses each of the design parameters)",
-//       "references": "The dashboard layout shown in the example demonstrates effective information density and quick navigation patterns and this design incorporates a similar layout with a sidebar for navigation and a main content area for the dashboard.",
-//       "user_feedback_consideration": "N/A because the user didn't write anything in the comments."
-//     }}
-//   ]
-
-//   IMPORTANT: 
-//   - Your response must be a valid JSON array. Do not include any text before or after the JSON.
-//   - Do not mark the response as JSON using "~~~json".
-//   - Do not include any backticks, code fences, or language tags. Return only the raw JSON array.
-//   `
-// );
 
 export const promptOverallDesign = PromptTemplate.fromTemplate(
-  `Analyze the following information and follow the specific design parameters to generate 1 distinct high-level design concept that can support the user to accomplish their goal by performing the tasks.
+  `Analyze the following information and follow the specific design parameters to generate 5 distinct high-level design concepts that can support the user to accomplish their goal by performing the tasks. These design ideas should directly address each of the following design parameters:
 
   Design Parameters: {designParameters}
-
-  Requirements:
-  - Generate exactly 1 distinct high-level design idea
-  - The design should directly address each of the design parameters
 
   Format the output as a JSON array where each design object has these fields:
   - design_id: A unique integer identifier
   - design_name: A highly-descriptive short sentence for the design: one should be able to understand the design from the name without reading the rest of the design concept
   - core_concept: Describing the main design approach---importantly, how it addresses each of the design parameters
-
-  Example format (do not include this in your response):
-  [
-    {{
-      "design_id": 1,
-      "design_name": "Dashboard-Centric Approach",
-      "core_concept": "A centralized dashboard that provides quick access to all deployment tools and monitoring features. ... (describe how it addresses each of the design parameters)"
-    }}
-  ]
+  - detailed_description: A detailed description of the design concept for a UX designer to understand and implement into specific screens
 
   IMPORTANT: 
   - Your response must be a valid JSON array. Do not include any text before or after the JSON.
@@ -309,83 +252,6 @@ export const promptTaskScreenMapping = PromptTemplate.fromTemplate(
   }}
 `);
 
-
-// export const promptSVGCodeGeneration = PromptTemplate.fromTemplate(
-//   `Generate SVG code to render a wireframe UI mock-up of the following screen. Give only the code. No explanation or comments.
- 
-
-//   Screen Description:
-//   {screenDescription}
-
-//   Requirements:
-//   - Include all necessary UI elements mentioned in the description, especially those listed in the "elements" field
-//   - Implement all functionality described in the "functionality" field
-//   - Follow the layout and interaction patterns specified
-//   - The UI should be for a desktop application
-//   - The SVG should resemble human hand-drawn wireframes
-//   - Use Comic Sans MS as the font
-//   - Only use gray-scale colors
-//   - Use proper SVG syntax with valid attributes
-//   - All attributes must have proper values (e.g., d="M 0 0 L 100 100", not d="M 0 0 y1=")
-//   - Path elements should have complete and valid d attributes
-//   - All quotes must be properly closed
-//   - Use standard SVG elements: rect, circle, ellipse, line, polyline, polygon, path, text
-//   - Include proper viewBox attribute on the root svg element
-//   - Elements should have proper outlines/boundaries. 
-//   - Use stroke and fill attributes for styling.
-  
-//   IMPORTANT: 
-//   - Return only the complete SVG code. Do not include any explanations or text before or after the code. 
-//   - Do not mark the response as SVG using "\`\`\`svg".
-//   - Ensure all SVG attributes are properly formatted and complete.
-//   - Pay special attention to the "elements" and "functionality" fields to ensure all specified UI components are included.
-//   `
-// );
-
-// export const promptSVGCodeGeneration = PromptTemplate.fromTemplate(
-//   `ROLE & GOAL:
-// You are an expert UI wire‑framing assistant. Produce one complete, valid SVG that looks like a hand‑drawn wireframe of the screen described below.
-
-// SCREEN DESCRIPTION:
-// {screenDescription}
-
-// MUST‑HAVE ELEMENTS & BEHAVIORS:
-// - Include every UI element listed in “elements”.
-// - Implement every behavior in “functionality”.
-// - Desktop‑oriented layout.
-
-// STYLE & FORMAT RULES:
-// 1. Root <svg> must include a proper viewBox.
-// 2. Every attribute value must be fully quoted (d, x, y, width, height, etc.).
-// 3. No unclosed quotes; no stray characters before or after quotes.
-// 4. Each <path> must contain a complete d="...".
-// 5. Use stroke and fill attributes; avoid CSS classes.
-// 6. Use Comic Sans MS font and gray‑scale colors only (#000 – #FFF) plus transparent fills.
-// 7. OUTPUT ONLY THE SVG MARKUP — no prose, no code fences.
-
-// SELF‑CHECK & REPAIR LOOP (DO NOT PRINT THIS SECTION):
-// Repeat until all tests pass:
-//   a) Store your draft in svg_code.
-//   b) Regex‑wrap any bare attribute values:
-//        svg_code = re.sub(r'([a-zA-Z_:][-a-zA-Z0-9_:.]*)=(?!["\'])([^"\'>\s]+)',
-//                          lambda m: f'{{{{m.group(1)}}}}="{{{{m.group(2)}}}}"', svg_code)
-//   c) Try to parse svg_code with an XML parser (e.g., xml.etree.ElementTree.fromstring).
-//      • If parsing fails, read the error (line, column) and fix:
-//          – Insert missing opening/closing quotes.
-//          – Remove newlines inside quoted values.
-//          – Escape or remove stray characters.
-//      • If parsing succeeds, run this checklist:
-//          1) Exactly one root <svg>.
-//          2) viewBox present.
-//          3) No unclosed tags or quotes.
-//          4) Every <path> has a well‑formed d.
-//          5) Only allowed elements appear (rect, circle, ellipse, line, polyline, polygon, path, text).
-//          6) Colors limited to gray‑scale range.
-//      • If any checklist item fails, repair svg_code and loop again.
-//   d) When XML parse and checklist both succeed, respond with svg_code ONLY.
-//   `
-// );
-
 export const promptSVGCodeGeneration = PromptTemplate.fromTemplate(
   `ROLE & GOAL:
 You are an expert UI wire‑framing assistant. Produce one complete, valid SVG that looks like a hand‑drawn wireframe of the screen described below.
@@ -403,7 +269,7 @@ STYLE & FORMAT RULES:
 3. No unclosed quotes; no stray characters before or after quotes.
 4. Each <path> must contain a complete d="...".
 5. Use stroke and fill attributes; avoid CSS classes.
-6. Use Comic Sans MS font and gray‑scale colors only (#000 – #FFF) plus transparent fills.
+6. Use Comic Sans MS font and gray-scale colors only (#000 - #FFF) plus transparent fills.
 7. OUTPUT ONLY THE SVG MARKUP — no prose, no code fences.
 
   `

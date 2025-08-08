@@ -53,6 +53,48 @@
   word-break: break-word;
   hyphens: auto;
   max-height: calc(1.3em * 2); /* 2 lines * line-height */
+  flex: 1;
+  margin-right: 8px;
+}
+
+.favorite-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.favorite-btn:hover {
+  background-color: #f1f5f9;
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.favorite-btn.favorited {
+  color: #f59e0b;
+}
+
+.favorite-btn.favorited:hover {
+  color: #d97706;
+  background-color: #fef3c7;
+}
+
+.favorite-btn svg {
+  fill: none;
+  stroke: currentColor;
+}
+
+.favorite-btn.favorited svg {
+  fill: currentColor;
+  stroke: currentColor;
 }
 
 .design-card-content {

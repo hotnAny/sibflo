@@ -41,18 +41,13 @@ Do not display or initiate the floating slider widget until a design space is cr
 Next to the gen ui button, let the user choose fast vs. high quality: fast uses modelLite and high quality uses modelPro
 
 
+Required input fields
 
 
-(Design card initial pos)
-
-Disable closing uiview while generating ui
-
-limit canvas zoom factor to no more than 2 and no smaller than 0.25
-
-Screen consistency
 
 Regen individual screen
 
 ? Necessary
 - add comment to each ui screen
 - add design dim
+

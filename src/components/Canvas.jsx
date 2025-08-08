@@ -5,7 +5,7 @@ import { Maximize } from 'lucide-react'
 import { stateStorage } from '../services/stateStorage'
 import './Canvas.css'
 
-const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentTrialId }) => {
+const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesignUpdate, currentTrialId }) => {
   // Flag to prevent saving state before loading initial state
   const [isCanvasStateLoaded, setIsCanvasStateLoaded] = useState(false)
   
@@ -150,19 +150,21 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
     
     // Calculate how many cards can fit in a row based on available width
     const cardsPerRow = Math.floor((canvasSize.width * 0.8) / (cardWidth + spacing))
-    const row = Math.floor(index / cardsPerRow)
-    const col = index % cardsPerRow
+    // const row = Math.floor(index / cardsPerRow)
+    // const col = index % cardsPerRow
     
     // Center the grid horizontally and vertically
     const gridWidth = Math.min(cardsPerRow, designCards.length) * (cardWidth + spacing) - spacing
     const gridHeight = (Math.ceil(designCards.length / cardsPerRow)) * (cardHeight + spacing) - spacing
     
-    const gridStartX = center.x - gridWidth / 2
+    const gridStartX = center.x - gridWidth / 8
     const gridStartY = center.y - gridHeight / 2
+
+    const offsetFactor = index * 0.1
     
     return {
-      x: gridStartX + col * (cardWidth + spacing),
-      y: gridStartY + row * (cardHeight + spacing)
+      x: gridStartX + (cardWidth + spacing) * offsetFactor,
+      y: gridStartY + (cardHeight + spacing) * offsetFactor
     }
   }
 
@@ -288,6 +290,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onDesignUpdate, currentT
                 zoom={zoom}
                 onOpenUIView={handleOpenUIView}
                 onRemoveDesignCard={onRemoveDesignCard}
+                onToggleFavorite={onToggleFavorite}
                 onPositionChange={handleCardPositionChange}
               />
             )
