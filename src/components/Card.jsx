@@ -148,10 +148,24 @@ const Card = ({
         </button>
       </div>
       <div className="design-card-content">
-        <p className="design-card-description">
-          {design.core_concept || design.description || 'No description available'}
-        </p>
-        {design.key_characteristics && (
+        {design.core_concept ? (
+          <div className="design-card-description">
+            {Array.isArray(design.core_concept) ? (
+              <ul className="core-concept-list">
+                {design.core_concept.map((concept, i) => (
+                  <li key={i}>{concept}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>{design.core_concept}</p>
+            )}
+          </div>
+        ) : (
+          <p className="design-card-description">
+            {design.description || 'No description available'}
+          </p>
+        )}
+        {/* {design.key_characteristics && (
           <div className="design-card-characteristics">
             <h4>Key Characteristics:</h4>
             <ul>
@@ -169,7 +183,7 @@ const Card = ({
             <h4>Rationale:</h4>
             <p>{design.rationale}</p>
           </div>
-        )}
+        )} */}
       </div>
       <div className="design-card-footer">
         <div className="design-card-actions">

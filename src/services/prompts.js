@@ -9,7 +9,7 @@ export const promptOverallDesign = PromptTemplate.fromTemplate(
   Format the output as a JSON array where each design object has these fields:
   - design_id: A unique integer identifier
   - design_name: A highly-descriptive short sentence for the design: one should be able to understand the design from the name without reading the rest of the design concept
-  - core_concept: Describing the main design approach---importantly, how it addresses each of the design parameters
+  - core_concept: Describing the main design approach---importantly, how it addresses each of the design parameters, formatted as a list of bullet points
   - detailed_description: A detailed description of the design concept for a UX designer to understand and implement into specific screens
 
   IMPORTANT: 

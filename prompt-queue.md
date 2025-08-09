@@ -38,7 +38,6 @@ Do not display or initiate the floating slider widget until a design space is cr
 
 ----
 
-Next to the gen ui button, let the user choose fast vs. high quality: fast uses modelLite and high quality uses modelPro
 
 
 Required input fields

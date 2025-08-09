@@ -68,10 +68,12 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
     stateStorage.saveCanvasState(currentState)
   }, [isCanvasStateLoaded, zoom, position, uiViewOpen, selectedDesign, cardPositions, cardZIndices, highestZIndex])
 
-  // Clean up card positions and z-indices when cards are removed
+  // Clean up card positions and z-indices when cards are removed, and handle new cards
   useEffect(() => {
     if (isCanvasStateLoaded) {
       const currentCardIds = designCards.map((design, index) => design.id || index)
+      
+      // Handle positions
       setCardPositions(prev => {
         const cleanedPositions = {}
         currentCardIds.forEach(cardId => {
@@ -81,17 +83,31 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
         })
         return cleanedPositions
       })
+      
+      // Handle z-indices and new cards
       setCardZIndices(prev => {
         const cleanedZIndices = {}
+        let newHighestZIndex = highestZIndex
+        
         currentCardIds.forEach(cardId => {
           if (prev[cardId]) {
             cleanedZIndices[cardId] = prev[cardId]
+          } else {
+            // This is a new card - assign it the highest z-index
+            newHighestZIndex += 1
+            cleanedZIndices[cardId] = newHighestZIndex
           }
         })
+        
+        // Update highest z-index if we assigned new z-indices
+        if (newHighestZIndex > highestZIndex) {
+          setHighestZIndex(newHighestZIndex)
+        }
+        
         return cleanedZIndices
       })
     }
-  }, [designCards, isCanvasStateLoaded])
+  }, [designCards, isCanvasStateLoaded, highestZIndex])
 
   const handleWheel = (e) => {
     // Check if the scroll event is happening over a design card or its content

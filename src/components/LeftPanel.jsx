@@ -283,6 +283,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     value={formData.context}
                     onChange={handleInputChange}
                     className="form-textarea"
+                    placeholder="Provide any relevant contextual information that can help the model understand your design needs ..."
                     rows="4"
                   />
                 </div>
@@ -295,7 +296,8 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     value={formData.user}
                     onChange={handleInputChange}
                     className="form-textarea"
-                    rows="3"
+                    placeholder="Describe the target user, their characteristics, needs, and pain points..."
+                    rows="2"
                   />
                 </div>
 
@@ -307,6 +309,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     value={formData.goal}
                     onChange={handleInputChange}
                     className="form-textarea"
+                    placeholder="What is the main objective or outcome the user wants to achieve?"
                     rows="2"
                   />
                 </div>
@@ -321,7 +324,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                         value={task}
                         onChange={(e) => updateTask(index, e.target.value)}
                         className="form-input"
-                        placeholder="Enter a task"
+                        placeholder="What'd users do to achieve the goal?"
                       />
                       <button
                         type="button"
@@ -348,7 +351,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                         value={example}
                         onChange={(e) => updateExample(index, e.target.value)}
                         className="form-input"
-                        placeholder="Enter an example"
+                        placeholder="Provide a publicly accessible link"
                       />
                       <button
                         type="button"

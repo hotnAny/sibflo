@@ -169,6 +169,20 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
     stateStorage.saveUIViewState(currentState)
   }, [isUIViewStateLoaded, isOpen, design, selectedTask, selectedScreen])
 
+  // Add your mounted code here
+  useEffect(() => {
+    if (isOpen && design && isUIViewStateLoaded) {
+      
+      // Auto-select the first task if no task is currently selected
+      if (selectedTask === null) {
+        setSelectedTask(0)
+      }
+      
+      // Example: Initialize analytics, set up event listeners, etc.
+      // Your mounted code goes here
+    }
+  }, [isOpen, design, isUIViewStateLoaded, selectedTask])
+
   const getScreenTitle = (index) => {
     // Use screens from design.screens if available, otherwise use the screens prop
     const screensToUse = design?.screens || screens

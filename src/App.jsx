@@ -139,10 +139,24 @@ function App() {
     const designWithId = {
       ...design,
       id: designId || Date.now(), // Use trial logger ID if available, otherwise fallback
-      favorite: false // Initialize favorite status
+      favorite: false, // Initialize favorite status
+      isNewCard: true // Flag to indicate this is a newly created card
     }
     setDesignCards([...designCards, designWithId])
   }
+
+  // Clean up isNewCard flag after cards are processed
+  useEffect(() => {
+    if (isStateLoaded && designCards.some(card => card.isNewCard)) {
+      setDesignCards(prevCards => 
+        prevCards.map(card => {
+          // eslint-disable-next-line no-unused-vars
+          const { isNewCard, ...cardWithoutFlag } = card
+          return cardWithoutFlag
+        })
+      )
+    }
+  }, [designCards, isStateLoaded])
 
   const handleRemoveDesignCard = (designId) => {
     setDesignCards(designCards.filter(card => card.id !== designId))
