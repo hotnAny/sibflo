@@ -566,7 +566,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
               
               <div className="ui-view-fullscreen-panel">
                 <h3>{screenTitle}</h3>
-                <p style={{minHeight: '150px'}}>{getScreenInteractionDescription(screen)}</p>
+                <p className='' style={{color: 'black', minHeight: '150px'}}>{getScreenInteractionDescription(screen)}</p>
                 
                 {/* Navigation buttons */}
                 {showNavigation && (
