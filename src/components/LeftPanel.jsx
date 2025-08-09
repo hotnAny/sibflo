@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronRight, ChevronLeft, X, Plus, Key, Save, Check, Send, Loader2 } from 'lucide-react'
+import { ChevronRight, ChevronLeft, X, Plus, Key, Save, Check, Palette, Loader2 } from 'lucide-react'
 import { modelService, GEMINI_MODELS } from '../services/model'
 import { genDesignSpace } from '../services/generationService'
 import { setGeminiModels } from '../services/chains'
@@ -379,7 +379,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                 </div>
 
                 <button type="submit" className="create-btn" disabled={!isApiKeySet || isGeneratingDesignSpace}>
-                  {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+                  {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Palette size={16} />}
                   &nbsp;&nbsp;
                   {isGeneratingDesignSpace ? 'Generating...' : 'Generate Design Space'}
                 </button>

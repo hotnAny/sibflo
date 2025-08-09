@@ -508,45 +508,79 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
           </div>
           
           <div className="ui-view-fullscreen-content">
-            <div className="ui-view-fullscreen-svg">
-              <div className="svg-render-fullscreen">
-                {renderSVG(screenCode)}
+            {/* Left Sidebar - Tasks (always visible) */}
+            <div className="ui-view-sidebar">
+              <h3>Tasks</h3>
+              <div className="task-list">
+                {(() => {
+                  // Use data from design object (populated by retrieveDesignData)
+                  const taskScreenMapping = design?.taskScreenMapping
+                  
+                  if (taskScreenMapping) {
+                    return Object.entries(taskScreenMapping).map(([taskKey, screenMapping], index) => {
+                      console.log('🎯 Rendering task:', taskKey, 'with mapping:', screenMapping)
+                      
+                      // Get tasks from the current trial
+                      const tasksFromTrial = getTasksFromTrial()
+                      
+                      // Get the task description for this index
+                      const taskDescription = tasksFromTrial[index]
+                      
+                      return (
+                        <div 
+                          key={index} 
+                          className={`task-item ${selectedTask === index ? 'task-item-selected' : ''}`}
+                          onClick={() => handleTaskClick(index)}
+                        >
+                          {taskDescription}
+                        </div>
+                      )
+                    })
+                  } else {
+                    return <div className="task-item">Plan a weekend of activities for my child</div>
+                  }
+                })()}
               </div>
             </div>
-            
-            <div className="ui-view-fullscreen-panel">
-              <h2>{screenTitle}</h2>
-              <h4>{getScreenInteractionDescription(screen)}</h4>
-              {/* <div className="interaction-description">
-                <p>{getScreenInteractionDescription(screen)}</p>
-              </div> */}
-              
-              {/* Navigation buttons */}
-              {showNavigation && (
-                <div className="screen-navigation">
-                  <div className="navigation-info">
-                    <span>Screen {currentScreenIndex + 1} of {currentTaskScreens.length}</span>
-                  </div>
-                  <div className="navigation-buttons">
-                    <button 
-                      className={`nav-btn nav-btn-prev ${!previousScreen ? 'nav-btn-disabled' : ''}`}
-                      onClick={() => handleNavigation('previous')}
-                      disabled={!previousScreen}
-                    >
-                      <ArrowLeft size={16} />
-                      Previous
-                    </button>
-                    <button 
-                      className={`nav-btn nav-btn-next ${!nextScreen ? 'nav-btn-disabled' : ''}`}
-                      onClick={() => handleNavigation('next')}
-                      disabled={!nextScreen}
-                    >
-                      Next
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
+
+            <div className="ui-view-fullscreen-main">
+              <div className="ui-view-fullscreen-svg">
+                <div className="svg-render-fullscreen">
+                  {renderSVG(screenCode)}
                 </div>
-              )}
+              </div>
+              
+              <div className="ui-view-fullscreen-panel">
+                <h3>{screenTitle}</h3>
+                <p style={{minHeight: '150px'}}>{getScreenInteractionDescription(screen)}</p>
+                
+                {/* Navigation buttons */}
+                {showNavigation && (
+                  <div className="screen-navigation">
+                    <div className="navigation-info">
+                      <span>Screen {currentScreenIndex + 1} of {currentTaskScreens.length}</span>
+                    </div>
+                    <div className="navigation-buttons">
+                      <button 
+                        className={`nav-btn nav-btn-prev ${!previousScreen ? 'nav-btn-disabled' : ''}`}
+                        onClick={() => handleNavigation('previous')}
+                        disabled={!previousScreen}
+                      >
+                        <ArrowLeft size={16} />
+                        Previous
+                      </button>
+                      <button 
+                        className={`nav-btn nav-btn-next ${!nextScreen ? 'nav-btn-disabled' : ''}`}
+                        onClick={() => handleNavigation('next')}
+                        disabled={!nextScreen}
+                      >
+                        Next
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -558,7 +592,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
     <div className="ui-view-overlay">
       <div className="ui-view">
         <div className="ui-view-header">
-          <h2>{design?.design_name}</h2>
+          <h3>{design?.design_name}</h3>
           <button className="ui-view-close" onClick={onClose} disabled={isGenerating}>
             <X size={20} />
           </button>
@@ -655,12 +689,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                         <div className="screen-card-header">
                           <h4>
                             {filteredIndex + 1}. {screenTitle}
-                            {isSelected && (
-                              <>
-                                <span className="selection-indicator">●</span>
-                                <span className="z-index-indicator">z:{cardZIndex}</span>
-                              </>
-                            )}
                           </h4>
                         </div>
                         <div className="screen-card-content">

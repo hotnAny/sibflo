@@ -21,7 +21,9 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
   // State for card positions
   const [cardPositions, setCardPositions] = useState({})
   
-
+  // State for card z-indices
+  const [cardZIndices, setCardZIndices] = useState({})
+  const [highestZIndex, setHighestZIndex] = useState(1)
   
   const canvasRef = useRef(null)
 
@@ -35,6 +37,12 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
       setSelectedDesign(savedState.selectedDesign)
       if (savedState.cardPositions) {
         setCardPositions(savedState.cardPositions)
+      }
+      if (savedState.cardZIndices) {
+        setCardZIndices(savedState.cardZIndices)
+      }
+      if (savedState.highestZIndex) {
+        setHighestZIndex(savedState.highestZIndex)
       }
     }
     // Mark state as loaded to enable saving
@@ -53,12 +61,14 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
       position,
       uiViewOpen,
       selectedDesign,
-      cardPositions
+      cardPositions,
+      cardZIndices,
+      highestZIndex
     }
     stateStorage.saveCanvasState(currentState)
-  }, [isCanvasStateLoaded, zoom, position, uiViewOpen, selectedDesign, cardPositions])
+  }, [isCanvasStateLoaded, zoom, position, uiViewOpen, selectedDesign, cardPositions, cardZIndices, highestZIndex])
 
-  // Clean up card positions when cards are removed
+  // Clean up card positions and z-indices when cards are removed
   useEffect(() => {
     if (isCanvasStateLoaded) {
       const currentCardIds = designCards.map((design, index) => design.id || index)
@@ -70,6 +80,15 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
           }
         })
         return cleanedPositions
+      })
+      setCardZIndices(prev => {
+        const cleanedZIndices = {}
+        currentCardIds.forEach(cardId => {
+          if (prev[cardId]) {
+            cleanedZIndices[cardId] = prev[cardId]
+          }
+        })
+        return cleanedZIndices
       })
     }
   }, [designCards, isCanvasStateLoaded])
@@ -191,6 +210,15 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
     }))
   }
 
+  const handleCardClick = (cardId) => {
+    const newZIndex = highestZIndex + 1
+    setCardZIndices(prev => ({
+      ...prev,
+      [cardId]: newZIndex
+    }))
+    setHighestZIndex(newZIndex)
+  }
+
   const handleResetCanvas = () => {
     setZoom(1)
     setPosition({ x: 0, y: 0 })
@@ -288,10 +316,12 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
                 index={index}
                 position={position}
                 zoom={zoom}
+                zIndex={cardZIndices[cardId] || 1}
                 onOpenUIView={handleOpenUIView}
                 onRemoveDesignCard={onRemoveDesignCard}
                 onToggleFavorite={onToggleFavorite}
                 onPositionChange={handleCardPositionChange}
+                onClick={() => handleCardClick(cardId)}
               />
             )
           })}

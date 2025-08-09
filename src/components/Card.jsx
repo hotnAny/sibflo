@@ -7,10 +7,12 @@ const Card = ({
   index, 
   position: initialPosition, 
   zoom = 1,
+  zIndex = 1,
   onOpenUIView, 
   onRemoveDesignCard,
   onPositionChange,
-  onToggleFavorite
+  onToggleFavorite,
+  onClick
 }) => {
   const [isDraggingCard, setIsDraggingCard] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
@@ -109,6 +111,15 @@ const Card = ({
     }
   }
 
+  const handleCardClick = (e) => {
+    // Only trigger click if not dragging and not clicking on buttons
+    if (!isDraggingCard && !e.target.closest('button')) {
+      if (onClick) {
+        onClick()
+      }
+    }
+  }
+
   return (
     <div 
       ref={cardRef}
@@ -116,11 +127,13 @@ const Card = ({
       data-card-id={cardId}
       style={{ 
         transform: getTransformString(),
-        cursor: isDraggingCard ? 'grabbing' : 'grab'
+        cursor: isDraggingCard ? 'grabbing' : 'grab',
+        zIndex: zIndex
       }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <div className="design-card-header">
         <h3 className="design-card-title">
