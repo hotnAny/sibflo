@@ -144,61 +144,38 @@ export function updateScreenDescriptions(screenDescriptions) {
   return _screenDescriptions;
 }
 
-// Update the UI codes if needed
-// export async function genUICodes({ screenDescriptions, critiques = [] }) {
-//   const startTime = Date.now();
-//   if (_uiCodes.length > 0 && critiques.length === 0) {
-//     return _uiCodes;
-//   }
-  
-//   // TODO: modify the prompt to take in the critiques
-//   const input = { screenDescriptions };
-//   console.log('🔗 Service: genUICodes - RAW INPUT:', input);
+// Generate UI code for a single screen
+  // This function can be used to generate UI code for individual screens on demand
+  export async function generateSingleScreenUI (screenSpecification, qualityModeToUse = 'fast') {
+    console.log('🎨 Starting single screen UI generation:', screenSpecification, 'with quality mode:', qualityModeToUse)
+    
+    if (!screenSpecification) {
+      throw new Error('No screen specification provided for UI generation')
+    }
 
-//   const response = await uiCodeChain.invoke(input);
+    try {
+      const generatedUICodes = await genUICodesStreaming({
+        screenDescriptions: [screenSpecification],
+        critiques: ["Fix issues or errors of the existing UI code and generate a new version of the UI code for the same screen"],
+        qualityMode: qualityModeToUse,
+        onProgress: () => {
+          console.log(`📝 Progress: Single screen code generated (${qualityModeToUse} mode)`)
+        }
+      })
 
-//   // The uiCodeChain returns an array of objects with {screenIndex, code}
-//   // We need to extract just the code strings and sort them by screenIndex
-//   if (Array.isArray(response)) {
-//     // Sort by screenIndex to ensure correct order
-//     const sortedCodes = response
-//       .sort((a, b) => a.screenIndex - b.screenIndex)
-//       .map(item => item.code);
-//     _uiCodes = sortedCodes;
-//   } else {
-//     // If it's not an array, try to parse it as JSON
-//     try {
-//       const parsed = JSON.parse(response);
-//       if (Array.isArray(parsed)) {
-//         const sortedCodes = parsed
-//           .sort((a, b) => a.screenIndex - b.screenIndex)
-//           .map(item => item.code);
-//         _uiCodes = sortedCodes;
-//       } else {
-//         _uiCodes = [response]; // Fallback to treating as single string
-//       }
-//     } catch {
-//       _uiCodes = [response]; // Fallback to treating as single string
-//     }
-//   }
-
-//   const endTime = Date.now();
-//   const duration = endTime - startTime;
-//   // console.log(`🎨 Service: Generated UI codes in ${duration}ms`);
-//   console.log('🔗 Service: genUICodes - RAW OUTPUT:', _uiCodes);
-  
-//   // Log the generated UI codes result
-//   console.log('📋 UI CODES GENERATION RESULT:', {
-//     uiCodes: _uiCodes,
-//     duration: duration,
-//     input: {
-//       screenDescriptions: screenDescriptions,
-//       critiques: critiques
-//     }
-//   });
-  
-//   return _uiCodes;
-// }
+      console.log('✅ Single screen UI generation completed:', generatedUICodes, 'using', qualityModeToUse, 'mode')
+      
+      // Return the generated UI code for the single screen
+      if (generatedUICodes && generatedUICodes.length > 0) {
+        return generatedUICodes[0]
+      } else {
+        throw new Error('No UI code was generated for the single screen')
+      }
+    } catch (error) {
+      console.error('❌ Error generating single screen UI code:', error)
+      throw error
+    }
+  }
 
 // New streaming version that updates UI as each screen completes
 export async function genUICodesStreaming({ screenDescriptions, critiques = [], qualityMode = 'fast', onProgress = null }) {

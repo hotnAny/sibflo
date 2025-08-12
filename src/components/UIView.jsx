@@ -121,6 +121,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
     }
   }
 
+  
+
   // Load UIView state when component opens or design changes
   useEffect(() => {
     if (isOpen && design) {
@@ -335,24 +337,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
     } else if (direction === 'previous' && currentScreenIndex > 0) {
       targetScreenIndex = currentScreenIndex - 1
     }
-
-    // // if (targetScreenIndex) {
-    //   const screensToUse = design?.screens || screens
-      
-    //   // Try to find the original index using multiple methods
-    //   let originalIndex = screensToUse.findIndex(s => 
-    //     s.screen_id === targetScreen.screen_id || s.id === targetScreen.id || s === targetScreen
-    //   )
-      
-    //   // If not found, try using the taskScreenIndex
-    //   if (originalIndex === -1 && targetScreen.taskScreenIndex !== undefined) {
-    //     originalIndex = targetScreen.taskScreenIndex
-    //   }
-      
-    //   // If still not found, use 0 as fallback
-    //   if (originalIndex === -1) {
-    //     originalIndex = 0
-    //   }
       
       setSelectedScreen({ screen: currentTaskScreens[targetScreenIndex], index: targetScreenIndex })
     }
@@ -463,11 +447,58 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
     }
 
     setIsGenerating(true)
+    
     try {
-      // Use the internal generateUICodes function
-      const updatedDesign = await generateUICodes(design, qualityMode)
-      if (onDesignUpdate) {
-        onDesignUpdate(updatedDesign)
+      if(selectedScreen === null) {
+        // Use the internal generateUICodes function
+        const updatedDesign = await generateUICodes(design, qualityMode)
+        if (onDesignUpdate) {
+          onDesignUpdate(updatedDesign)
+        }
+      } else {
+        console.log('🎯 Selected screen:', selectedScreen)
+        const { generateSingleScreenUI } = await import('../services/generationService')
+        const updatedUICode = await generateSingleScreenUI(selectedScreen.screen, qualityMode)
+        console.log('🎯 Updated UICode:', updatedUICode)
+        
+        // Update the screen's UI code in the design object
+        if (updatedUICode && selectedDesign) {
+          const { screen, index } = selectedScreen
+          
+          // Find the screen in the design and update its UI code
+          const updatedDesign = {
+            ...selectedDesign,
+            screens: selectedDesign.screens.map((designScreen, screenIndex) => {
+              // Check if this is the screen we want to update
+              if (screenIndex === index) {
+                return {
+                  ...designScreen,
+                  ui_code: updatedUICode
+                }
+              }
+              return designScreen
+            })
+          }
+          
+          // Update the local state to trigger re-render
+          setSelectedDesign(updatedDesign)
+          
+          // Update the selectedScreen to reflect the new UI code
+          setSelectedScreen({
+            ...selectedScreen,
+            screen: {
+              ...screen,
+              ui_code: updatedUICode
+            }
+          })
+          
+          // Persist the changes to the parent component
+          if (onDesignUpdate) {
+            onDesignUpdate(updatedDesign)
+          }
+          
+          console.log('🎯 Screen UI code updated successfully')
+        }
       }
     } catch (error) {
       console.error('Error generating UI:', error)
@@ -596,6 +627,37 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                 )}
               </div>
             </div>
+            
+            {/* Generate UI Button and Quality Dropdown - positioned at lower left in fullscreen view */}
+            <div className="ui-view-generate-controls">
+              <select
+                className="ui-view-quality-dropdown"
+                value={qualityMode}
+                onChange={(e) => setQualityMode(e.target.value)}
+                disabled={isGenerating}
+              >
+                <option value="fast">Fast</option>
+                <option value="high">HQ</option>
+              </select>
+              
+              <button 
+                className="ui-view-generate-btn"
+                onClick={handleGenerateUI}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="spinner"></div>
+                    Generating ...
+                  </>
+                ) : (
+                  <>
+                    <Code size={16} style={{ color: 'white' }} />
+                    Generate UI
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -670,7 +732,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                     
                     // Find the original index of this screen in the screens array
                     const originalIndex = screensToUse.findIndex(s => 
-                      s.screen_id === screen.screen_id || s.id === screen.id || s === screen
+                      // s.screen_id === screen.screen_id || s.id === screen.id || s === screen
+                      s.title === screen.title
                     )
                     
                     // Generate a unique key using screen_id, id, or a combination
