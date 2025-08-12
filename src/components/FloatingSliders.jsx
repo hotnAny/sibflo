@@ -242,23 +242,25 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
         ref={(el) => {
           dropdownRefs.current[slider.id] = el
         }}
+        activity="custom dropdown container for slider options"
       >
         <button
           className="custom-dropdown-button"
           onClick={() => toggleDropdown(slider.id)}
           type="button"
+          activity="toggle dropdown menu for slider options"
         >
-          <div className="dropdown-selected-content">
-            <div className="dropdown-option-heading">{selectedOption.option_name || selectedOption}</div>
+          <div className="dropdown-selected-content" activity="display selected dropdown option content">
+            <div className="dropdown-option-heading" activity="display selected option name">{selectedOption.option_name || selectedOption}</div>
             {selectedOption.option_description && (
-              <div className="dropdown-option-subtitle">{selectedOption.option_description}</div>
+              <div className="dropdown-option-subtitle" activity="display selected option description">{selectedOption.option_description}</div>
             )}
           </div>
           <ChevronDown size={16} className={`dropdown-arrow ${isOpen ? 'open' : ''}`} />
         </button>
         
         {isOpen && (
-          <div className="custom-dropdown-menu">
+          <div className="custom-dropdown-menu" activity="dropdown menu with available options">
             {options ? (
               options.map((option, optionIndex) => (
                 <button
@@ -266,10 +268,11 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
                   className={`custom-dropdown-option ${optionIndex === value ? 'selected' : ''}`}
                   onClick={() => onChange(slider.id, optionIndex)}
                   type="button"
+                  activity="select dropdown option for slider value"
                 >
-                  <div className="dropdown-option-heading">{option.option_name}</div>
+                  <div className="dropdown-option-heading" activity="display option name">{option.option_name}</div>
                   {option.option_description && (
-                    <div className="dropdown-option-subtitle">{option.option_description}</div>
+                    <div className="dropdown-option-subtitle" activity="display option description">{option.option_description}</div>
                   )}
                 </button>
               ))
@@ -280,8 +283,9 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
                   className={`custom-dropdown-option ${optionValue === value ? 'selected' : ''}`}
                   onClick={() => onChange(slider.id, optionValue)}
                   type="button"
+                  activity="select numeric option value for slider"
                 >
-                  <div className="dropdown-option-heading">{optionValue}</div>
+                  <div className="dropdown-option-heading" activity="display numeric option value">{optionValue}</div>
                 </button>
               ))
             )}
@@ -293,10 +297,10 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
 
   return (
     <>
-      <div className="floating-sliders-wrapper">
-        <div className="floating-sliders">
-        <div className="sliders-header">
-          <h3>Design Space</h3>
+      <div className="floating-sliders-wrapper" activity="floating sliders main container">
+        <div className="floating-sliders" activity="floating sliders content area">
+        <div className="sliders-header" activity="sliders header section">
+          <h3 activity="design space title">Design Space</h3>
           {/* {sliders.length > 0 && (
             <span className="selection-count">
               {selectedSliders.size} of {sliders.length} selected
@@ -305,15 +309,15 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
         </div>
 
         
-          <div className="sliders-content">
+          <div className="sliders-content" activity="sliders content container">
             {sliders.length === 0 ? (
-              <div className="no-sliders">
-                <p>No design space dimensions yet</p>
-                <p>Create a design space using the left panel to generate sliders</p>
+              <div className="no-sliders" activity="no sliders message display">
+                <p activity="no sliders instruction">No design space dimensions yet</p>
+                <p activity="create design space instruction">Create a design space using the left panel to generate sliders</p>
               </div>
             ) : (
               <>
-                <div className="sliders-list">
+                <div className="sliders-list" activity="list of design space sliders">
                   {sliders.map((slider) => (
                     <div
                       key={slider.id}
@@ -322,9 +326,10 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
                       onDragStart={(e) => handleDragStart(e, slider)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, slider)}
+                      activity="individual slider item container"
                     >
-                      <div className="slider-header">
-                        <div className="slider-checkbox">
+                      <div className="slider-header" activity="slider header with checkbox and label">
+                        <div className="slider-checkbox" activity="slider selection checkbox container">
                           <input
                             type="checkbox"
                             id={`slider-checkbox-${slider.id}`}
@@ -332,15 +337,16 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
                             onChange={() => handleSliderToggle(slider.id)}
                             className="slider-checkbox-input"
                             aria-label={`Select ${slider.label} design dimension`}
+                            activity="toggle slider selection for design generation"
                           />
                         </div>
-                        <div className="slider-info">
-                          <span className="slider-label">{slider.label}</span>
+                        <div className="slider-info" activity="slider information display">
+                          <span className="slider-label" activity="slider dimension label">{slider.label}</span>
                         </div>
                       </div>
                       
-                      <div className="slider-control">
-                        <div className="slider-range">
+                      <div className="slider-control" activity="slider control interface">
+                        <div className="slider-range" activity="slider range selection">
                           <CustomDropdown
                             slider={slider}
                             options={slider.options}
@@ -362,10 +368,11 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
             className="floating-create-design-btn"
             onClick={handleCreateDesign}
             disabled={isCreatingDesign || sliders.length === 0}
+            activity="create design from selected sliders"
           >
             {isCreatingDesign ? (
               <>
-                <div className="spinner"></div>
+                <div className="spinner" activity="loading spinner animation"></div>
                 Creating Design...
               </>
             ) : (

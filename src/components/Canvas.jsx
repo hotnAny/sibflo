@@ -127,7 +127,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
     const newZoom = Math.max(0.5, Math.min(2, zoom * delta))
-    console.log('Current zoom factor:', newZoom)
+    // console.log('Current zoom factor:', newZoom)
     setZoom(newZoom)
   }
 
@@ -293,7 +293,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
   }, [isDragging])
 
   return (
-    <div className="canvas-container">
+    <div className="canvas-container" activity="canvas main container">
       <div 
         ref={canvasRef}
         className="canvas"
@@ -303,22 +303,22 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
           transform: `translate(-50%, -50%) scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
-
+        activity="canvas area with zoom and pan functionality"
       >
-        <div className="canvas-grid">
+        <div className="canvas-grid" activity="canvas grid background">
           {/* Grid pattern */}
-          <svg className="grid-pattern" width="100%" height="100%">
-            <defs>
-              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+          <svg className="grid-pattern" width="100%" height="100%" activity="grid pattern SVG overlay">
+            <defs activity="SVG definitions for grid pattern">
+              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse" activity="grid pattern definition">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="1" activity="grid line path"/>
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+            <rect width="100%" height="100%" fill="url(#grid)" activity="grid pattern background rectangle"/>
           </svg>
         </div>
         
         {/* Design Cards */}
-        <div className="canvas-content">
+        <div className="canvas-content" activity="canvas content area for design cards">
           {designCards.map((design, index) => {
             const defaultPosition = getDesignCardPosition(index)
             const cardId = design.id || index
@@ -351,6 +351,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
         className="reset-canvas-button"
         onClick={handleResetCanvas}
         title="Reset canvas position and zoom"
+        activity="reset canvas to default position and zoom"
       >
         <Maximize size={18} />
       </button>

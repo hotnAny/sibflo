@@ -134,34 +134,36 @@ const Card = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
+      activity="design card container with drag and drop functionality"
     >
-      <div className="design-card-header">
-        <h3 className="design-card-title">
+      <div className="design-card-header" activity="design card header section">
+        <h3 className="design-card-title" activity="design card title display">
           {design.design_name || design.name || `Design ${index + 1}`}
         </h3>
         <button 
           className={`favorite-btn ${design.favorite ? 'favorited' : ''}`}
           onClick={handleFavoriteClick}
           title={design.favorite ? 'Remove from favorites' : 'Add to favorites'}
+          activity="toggle favorite status for design card"
         >
           <Star size={16} />
         </button>
       </div>
-      <div className="design-card-content">
+      <div className="design-card-content" activity="design card content section">
         {design.core_concept ? (
-          <div className="design-card-description">
+          <div className="design-card-description" activity="design card core concept display">
             {Array.isArray(design.core_concept) ? (
-              <ul className="core-concept-list">
+              <ul className="core-concept-list" activity="list of core concepts">
                 {design.core_concept.map((concept, i) => (
-                  <li key={i}>{concept}</li>
+                  <li key={i} activity="individual core concept item">{concept}</li>
                 ))}
               </ul>
             ) : (
-              <p>{design.core_concept}</p>
+              <p activity="single core concept display">{design.core_concept}</p>
             )}
           </div>
         ) : (
-          <p className="design-card-description">
+          <p className="design-card-description" activity="design card description fallback">
             {design.description || 'No description available'}
           </p>
         )}
@@ -185,12 +187,13 @@ const Card = ({
           </div>
         )} */}
       </div>
-      <div className="design-card-footer">
-        <div className="design-card-actions">
+      <div className="design-card-footer" activity="design card footer with action buttons">
+        <div className="design-card-actions" activity="design card action buttons container">
           <button 
             className="control-btn"
             onClick={() => onOpenUIView(design)}
             title="View UI"
+            activity="open UI view for design"
           >
             <Eye size={16} />
           </button>
@@ -199,6 +202,7 @@ const Card = ({
               className="control-btn"
               onClick={() => onRemoveDesignCard(design.id || index)}
               title="Remove design"
+              activity="remove design card from canvas"
             >
               <Trash2 size={16} />
             </button>

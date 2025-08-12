@@ -399,6 +399,236 @@ select.form-input {
   margin-top: 8px;
 }
 
+/* Sessions Management Styles */
+.session-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.session-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.refresh-btn {
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.refresh-btn:hover {
+  background-color: #4b5563;
+}
+
+.download-btn {
+  flex: 1;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.download-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.download-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.clear-sessions-btn {
+  flex: 1;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.clear-sessions-btn:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.clear-sessions-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.sessions-list {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sessions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sessions-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sessions-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.session-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+.session-item:last-child {
+  border-bottom: none;
+}
+
+.session-item:hover {
+  background-color: #f8fafc;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.session-type {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-icon {
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.session-icon.behavior {
+  color: #3b82f6;
+  background-color: #dbeafe;
+}
+
+.session-icon.trial {
+  color: #10b981;
+  background-color: #d1fae5;
+}
+
+.session-type-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.session-time {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.session-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.session-id {
+  font-size: 11px;
+  color: #6b7280;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.session-count {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.session-duration {
+  font-size: 11px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.more-sessions {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #6b7280;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.no-sessions {
+  padding: 24px 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 /* Response Section */
 .response-section {
   margin-top: 8px;

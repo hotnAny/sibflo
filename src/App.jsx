@@ -59,8 +59,13 @@ function App() {
       console.log('🔄 Left panel form data restored from localStorage')
     }
 
+    // The userBehaviorLogger is now managed by the context provider
+    // No need to manually initialize or destroy
+
     // Mark state as loaded to enable saving
     setIsStateLoaded(true)
+
+    // No cleanup function needed - the context provider handles this
   }, [])
 
   // Save state to localStorage whenever relevant state changes (but only after initial load)

@@ -16,7 +16,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
 
   // Internal function to generate UI codes and update design
   const generateUICodes = async (designToUpdate, qualityModeToUse = 'fast') => {
-    console.log('🎨 Starting UI code generation for design:', designToUpdate, 'with quality mode:', qualityModeToUse)
+    // console.log('🎨 Starting UI code generation for design:', designToUpdate, 'with quality mode:', qualityModeToUse)
     
     // Check if design has screens
     const screensToUse = designToUpdate.screens || []
@@ -54,10 +54,10 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             screens: updatedScreens
           }
           
-          console.log(`🎨 Updated screen ${screenIndex + 1} with UI code:`, {
-            screenIndex,
-            uiCodeSnippet: uiCode ? uiCode.substring(0, 50) + '...' : 'N/A'
-          })
+          // console.log(`🎨 Updated screen ${screenIndex + 1} with UI code:`, {
+          //   screenIndex,
+          //   uiCodeSnippet: uiCode ? uiCode.substring(0, 50) + '...' : 'N/A'
+          // })
           
           // Save the updated design to the design object
           if (onDesignUpdate) {
@@ -73,7 +73,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
         critiques: [],
         qualityMode: qualityModeToUse,
         onProgress: (codes, index, code) => {
-          console.log(`📝 Progress: Screen ${index + 1} code generated (${qualityModeToUse} mode)`)
+          // console.log(`📝 Progress: Screen ${index + 1} code generated (${qualityModeToUse} mode)`)
           // Update the UI immediately when a screen's code is generated
           if (code && !code.startsWith('Error:')) {
             updateScreenWithCode(index, code)
@@ -81,7 +81,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
         }
       })
 
-      console.log('✅ UI code generation completed:', generatedUICodes, 'using', qualityModeToUse, 'mode')
+      // console.log('✅ UI code generation completed:', generatedUICodes, 'using', qualityModeToUse, 'mode')
       
       // Final update to ensure all codes are properly set
       if (generatedUICodes && generatedUICodes.length > 0) {
@@ -93,15 +93,15 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
           }))
         }
         
-        console.log('🎨 Final design update with UI codes:', {
-          designId: updatedDesign.id,
-          screensCount: updatedDesign.screens?.length || 0,
-          uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0,
-          qualityMode: qualityModeToUse,
-          uiCodesSnippets: updatedDesign.screens?.map(screen => 
-            screen.ui_code ? screen.ui_code.substring(0, 50) + '...' : 'N/A'
-          ) || []
-        })
+        // console.log('🎨 Final design update with UI codes:', {
+        //   designId: updatedDesign.id,
+        //   screensCount: updatedDesign.screens?.length || 0,
+        //   uiCodesCount: updatedDesign.screens?.filter(screen => screen.ui_code).length || 0,
+        //   qualityMode: qualityModeToUse,
+        //   uiCodesSnippets: updatedDesign.screens?.map(screen => 
+        //     screen.ui_code ? screen.ui_code.substring(0, 50) + '...' : 'N/A'
+        //   ) || []
+        // })
         
         // Update the selectedDesign state to trigger final re-render
         setSelectedDesign(updatedDesign)
@@ -135,17 +135,17 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
       if (savedState && !isUIViewStateLoaded) {
         setSelectedTask(savedState.selectedTask)
         setSelectedScreen(savedState.selectedScreen)
-        console.log('🔄 UIView state restored from localStorage')
+        // console.log('🔄 UIView state restored from localStorage')
       }
       
       // Mark state as loaded to enable saving
       setIsUIViewStateLoaded(true)
       
-      console.log('🔄 UIView updated with design data:', {
-        designId: design.id,
-        screensCount: design.screens?.length || 0,
-        uiCodesCount: design.screens?.filter(screen => screen.ui_code).length || 0
-      })
+      // console.log('🔄 UIView updated with design data:', {
+      //   designId: design.id,
+      //   screensCount: design.screens?.length || 0,
+      //   uiCodesCount: design.screens?.filter(screen => screen.ui_code).length || 0
+      // })
     } else {
       // Reset state when closing
       setIsUIViewStateLoaded(false)
@@ -158,7 +158,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
   // Save UIView state to localStorage whenever relevant state changes
   useEffect(() => {
     if (!isUIViewStateLoaded || !isOpen || !design) {
-      console.log('⏳ Skipping UIView state save - not ready yet')
+      // console.log('⏳ Skipping UIView state save - not ready yet')
       return
     }
     
@@ -218,6 +218,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
           <div 
             className="svg-render"
             dangerouslySetInnerHTML={{ __html: svgContent }}
+            activity="render SVG content from generated UI code"
           />
         )
       }
@@ -343,17 +344,17 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
   // }
 
   const handleTaskClick = (taskIndex) => {
-    console.log('🎯 Task clicked:', taskIndex, 'Current selectedTask:', selectedTask)
+    // console.log('🎯 Task clicked:', taskIndex, 'Current selectedTask:', selectedTask)
     
     // Clear the selected screen when switching tasks
     setSelectedScreen(null)
     
     // Toggle the selected task (if clicking the same task, deselect it)
     if (selectedTask === taskIndex) {
-      console.log('🎯 Deselecting task:', taskIndex)
+      // console.log('🎯 Deselecting task:', taskIndex)
       setSelectedTask(null)
     } else {
-      console.log('🎯 Selecting task:', taskIndex)
+      // console.log('🎯 Selecting task:', taskIndex)
       setSelectedTask(taskIndex)
     }
     
@@ -370,15 +371,15 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
       
       // If this card is already selected (has a z-index), deselect it
       if (newZIndices[cardId] !== undefined) {
-        console.log(`🎯 Deselecting card: ${cardId}`)
+        // console.log(`🎯 Deselecting card: ${cardId}`)
         delete newZIndices[cardId]
-        console.log('📊 Updated z-indices:', newZIndices)
+        // console.log('📊 Updated z-indices:', newZIndices)
         return newZIndices
       }
       
       // If selecting a new card
-      console.log(`🎯 Selecting card: ${cardId}`)
-      console.log('📊 Previous z-indices:', newZIndices)
+      // console.log(`🎯 Selecting card: ${cardId}`)
+      // console.log('📊 Previous z-indices:', newZIndices)
       
       // 1. Reduce z-index of all other cards by 1
       Object.keys(newZIndices).forEach(id => {
@@ -393,7 +394,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
       // 3. Set the selected card's z-index to max + 1
       newZIndices[cardId] = maxZIndex + 1
       
-      console.log('📊 Updated z-indices:', newZIndices)
+      // console.log('📊 Updated z-indices:', newZIndices)
       return newZIndices
     })
     
@@ -456,10 +457,10 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
           onDesignUpdate(updatedDesign)
         }
       } else {
-        console.log('🎯 Selected screen:', selectedScreen)
+        // console.log('🎯 Selected screen:', selectedScreen)
         const { generateSingleScreenUI } = await import('../services/generationService')
         const updatedUICode = await generateSingleScreenUI(selectedScreen.screen, qualityMode)
-        console.log('🎯 Updated UICode:', updatedUICode)
+        // console.log('🎯 Updated UICode:', updatedUICode)
         
         // Update the screen's UI code in the design object
         if (updatedUICode && selectedDesign) {
@@ -497,7 +498,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             onDesignUpdate(updatedDesign)
           }
           
-          console.log('🎯 Screen UI code updated successfully')
+          // console.log('🎯 Screen UI code updated successfully')
         }
       }
     } catch (error) {
@@ -540,30 +541,30 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                        getScreenTitle(index)
     
     return (
-      <div className="ui-view-overlay">
-        <div className="ui-view-fullscreen">
-          <div className="ui-view-fullscreen-header">
-            <button className="ui-view-back-btn" onClick={handleBackToGrid}>
+      <div className="ui-view-overlay" activity="UI view fullscreen overlay">
+        <div className="ui-view-fullscreen" activity="UI view fullscreen container">
+          <div className="ui-view-fullscreen-header" activity="fullscreen header with navigation buttons">
+            <button className="ui-view-back-btn" onClick={handleBackToGrid} activity="return to screen grid view">
               <ArrowLeft size={20} />
             </button>
             
-            <button className="ui-view-close" onClick={onClose} disabled={isGenerating}>
+            <button className="ui-view-close" onClick={onClose} disabled={isGenerating} activity="close UI view">
               <X size={20} />
             </button>
           </div>
           
-          <div className="ui-view-fullscreen-content">
+          <div className="ui-view-fullscreen-content" activity="fullscreen content area">
             {/* Left Sidebar - Tasks (always visible) */}
-            <div className="ui-view-sidebar">
-              <h3>Tasks</h3>
-              <div className="task-list">
+            <div className="ui-view-sidebar" activity="tasks sidebar navigation">
+              <h3 activity="tasks section title">Tasks</h3>
+              <div className="task-list" activity="list of available tasks">
                 {(() => {
                   // Use data from design object (populated by retrieveDesignData)
                   const taskScreenMapping = design?.taskScreenMapping
                   
                   if (taskScreenMapping) {
-                    return Object.entries(taskScreenMapping).map(([taskKey, screenMapping], index) => {
-                      console.log('🎯 Rendering task:', taskKey, 'with mapping:', screenMapping)
+                    return Object.entries(taskScreenMapping).map(([, ], index) => {
+                      // console.log('🎯 Rendering task:', index, 'with mapping:', taskScreenMapping[index])
                       
                       // Get tasks from the current trial
                       const tasksFromTrial = getTasksFromTrial()
@@ -576,40 +577,42 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                           key={index} 
                           className={`task-item ${selectedTask === index ? 'task-item-selected' : ''}`}
                           onClick={() => handleTaskClick(index)}
+                          activity="select task for screen filtering"
                         >
                           {taskDescription}
                         </div>
                       )
                     })
                   } else {
-                    return <div className="task-item">Plan a weekend of activities for my child</div>
+                    return <div className="task-item" activity="default task placeholder">Plan a weekend of activities for my child</div>
                   }
                 })()}
               </div>
             </div>
 
-            <div className="ui-view-fullscreen-main">
-              <div className="ui-view-fullscreen-svg">
-                <div className="svg-render-fullscreen">
+            <div className="ui-view-fullscreen-main" activity="fullscreen main content area">
+              <div className="ui-view-fullscreen-svg" activity="fullscreen SVG rendering area">
+                <div className="svg-render-fullscreen" activity="fullscreen SVG content display">
                   {renderSVG(screenCode)}
                 </div>
               </div>
               
-              <div className="ui-view-fullscreen-panel">
-                <h3>{screenTitle}</h3>
-                <p className='' style={{color: 'black', minHeight: '150px'}}>{getScreenInteractionDescription(screen)}</p>
+              <div className="ui-view-fullscreen-panel" activity="fullscreen screen information panel">
+                <h3 activity="screen title display">{screenTitle}</h3>
+                <p className='' style={{color: 'black', minHeight: '150px'}} activity="screen interaction description">{getScreenInteractionDescription(screen)}</p>
                 
                 {/* Navigation buttons */}
                 {showNavigation && (
-                  <div className="screen-navigation">
-                    <div className="navigation-info">
-                      <span>Screen {currentScreenIndex + 1} of {currentTaskScreens.length}</span>
+                  <div className="screen-navigation" activity="screen navigation controls">
+                    <div className="navigation-info" activity="screen navigation information">
+                      <span activity="current screen position indicator">Screen {currentScreenIndex + 1} of {currentTaskScreens.length}</span>
                     </div>
-                    <div className="navigation-buttons">
+                    <div className="navigation-buttons" activity="screen navigation button container">
                       <button 
                         className={`nav-btn nav-btn-prev ${!previousScreen ? 'nav-btn-disabled' : ''}`}
                         onClick={() => handleNavigation('previous')}
                         disabled={!previousScreen}
+                        activity="navigate to previous screen"
                       >
                         <ArrowLeft size={16} />
                         Previous
@@ -618,6 +621,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                         className={`nav-btn nav-btn-next ${!nextScreen ? 'nav-btn-disabled' : ''}`}
                         onClick={() => handleNavigation('next')}
                         disabled={!nextScreen}
+                        activity="navigate to next screen"
                       >
                         Next
                         <ArrowRight size={16} />
@@ -629,25 +633,27 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             </div>
             
             {/* Generate UI Button and Quality Dropdown - positioned at lower left in fullscreen view */}
-            <div className="ui-view-generate-controls">
+            <div className="ui-view-generate-controls" activity="UI generation controls in fullscreen view">
               <select
                 className="ui-view-quality-dropdown"
                 value={qualityMode}
                 onChange={(e) => setQualityMode(e.target.value)}
                 disabled={isGenerating}
+                activity="select UI generation quality mode"
               >
-                <option value="fast">Fast</option>
-                <option value="high">HQ</option>
+                <option value="fast" activity="fast generation mode option">Fast</option>
+                <option value="high" activity="high quality generation mode option">HQ</option>
               </select>
               
               <button 
                 className="ui-view-generate-btn"
                 onClick={handleGenerateUI}
                 disabled={isGenerating}
+                activity="generate UI code for current screen"
               >
                 {isGenerating ? (
                   <>
-                    <div className="spinner"></div>
+                    <div className="spinner" activity="generation loading spinner"></div>
                     Generating ...
                   </>
                 ) : (
@@ -665,27 +671,27 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
   }
 
   return (
-    <div className="ui-view-overlay">
-      <div className="ui-view">
-        <div className="ui-view-header">
-          <h3>{design?.design_name}</h3>
-          <button className="ui-view-close" onClick={onClose} disabled={isGenerating}>
+    <div className="ui-view-overlay" activity="UI view main overlay">
+      <div className="ui-view" activity="UI view main container">
+        <div className="ui-view-header" activity="UI view header section">
+          <h3 activity="design name display">{design?.design_name}</h3>
+          <button className="ui-view-close" onClick={onClose} disabled={isGenerating} activity="close UI view">
             <X size={20} />
           </button>
         </div>
         
-        <div className="ui-view-content">
+        <div className="ui-view-content" activity="UI view main content area">
           {/* Left Sidebar - Tasks */}
-          <div className="ui-view-sidebar">
-            <h3>Tasks</h3>
-            <div className="task-list">
+          <div className="ui-view-sidebar" activity="tasks sidebar for screen filtering">
+            <h3 activity="tasks section title">Tasks</h3>
+            <div className="task-list" activity="list of available tasks">
               {(() => {
                 // Use data from design object (populated by retrieveDesignData)
                 const taskScreenMapping = design?.taskScreenMapping
                 
                 if (taskScreenMapping) {
-                  return Object.entries(taskScreenMapping).map(([taskKey, screenMapping], index) => {
-                    console.log('🎯 Rendering task:', taskKey, 'with mapping:', screenMapping)
+                  return Object.entries(taskScreenMapping).map(([, ], index) => {
+                    // console.log('🎯 Rendering task:', index, 'with mapping:', taskScreenMapping[index])
                     
                     // Get tasks from the current trial
                     const tasksFromTrial = getTasksFromTrial()
@@ -698,20 +704,21 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                         key={index} 
                         className={`task-item ${selectedTask === index ? 'task-item-selected' : ''}`}
                         onClick={() => handleTaskClick(index)}
+                        activity="select task to filter screens"
                       >
                         {taskDescription}
                       </div>
                     )
                   })
                 } else {
-                  return <div className="task-item">Plan a weekend of activities for my child</div>
+                  return <div className="task-item" activity="default task placeholder">Plan a weekend of activities for my child</div>
                 }
               })()}
             </div>
           </div>
 
           {/* Main Content - Screen Cards */}
-          <div className="ui-view-main">
+          <div className="ui-view-main" activity="main content area for screen cards">
             <div 
               className="screen-grid"
               onClick={(e) => {
@@ -720,10 +727,11 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                   setCardZIndices({}) // Clear all z-indices
                 }
               }}
+              activity="screen grid container for displaying screen cards"
             >
               {(() => {
                 const filteredScreens = getFilteredScreens()
-                console.log('🎨 Rendering filtered screens:', filteredScreens.length, 'for task:', selectedTask)
+                // console.log('🎨 Rendering filtered screens:', filteredScreens.length, 'for task:', selectedTask)
                 
                 if (filteredScreens.length > 0) {
                   return filteredScreens.map((screen, filteredIndex) => {
@@ -749,7 +757,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                     // Get the UI code directly from the screen object (from selectedDesign)
                     const screenUICode = screen.ui_code || ''
                     
-                    console.log(`🎨 Rendering screen: ${screenTitle} (ID: ${screen.screen_id || screen.id}), UI Code snippet:`, screenUICode ? screenUICode.substring(0, 50) + '...' : 'N/A')
+                    // console.log(`🎨 Rendering screen: ${screenTitle} (ID: ${screen.screen_id || screen.id}), UI Code snippet:`, screenUICode ? screenUICode.substring(0, 50) + '...' : 'N/A')
                     
                     // Generate card ID for z-index management
                     const cardId = screen.screen_id || screen.id || `screen-${originalIndex}`
@@ -762,25 +770,26 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                         className={`screen-card ${isSelected ? 'screen-card-selected' : ''}`}
                         onClick={() => handleScreenClick(screen, originalIndex)}
                         style={{ zIndex: cardZIndex || 'auto' }} // Apply z-index or auto if not set
+                        activity="individual screen card with selection functionality"
                       >
-                        <div className="screen-card-header">
-                          <h4>
+                        <div className="screen-card-header" activity="screen card header section">
+                          <h4 activity="screen card title">
                             {filteredIndex + 1}. {screenTitle}
                           </h4>
                         </div>
-                        <div className="screen-card-content">
+                        <div className="screen-card-content" activity="screen card content area">
                           {screenUICode ? (
-                            <div className="screen-card-content-wrapper">
-                              <div className="screen-card-render-section">
-                                <div className="screen-card-render">
+                            <div className="screen-card-content-wrapper" activity="screen card content wrapper">
+                              <div className="screen-card-render-section" activity="screen card render section">
+                                <div className="screen-card-render" activity="screen card SVG render area">
                                   {renderSVG(screenUICode)}
                                 </div>
                               </div>
                             </div>
                           ) : (
-                            <div className="screen-card-placeholder">
+                            <div className="screen-card-placeholder" activity="screen card placeholder when no UI code">
                               <Code size={32} />
-                              <p>No UI code generated yet</p>
+                              <p activity="no UI code message">No UI code generated yet</p>
                             </div>
                           )}
                         </div>
@@ -789,16 +798,16 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                   })
                 } else {
                   return (
-                    <div className="no-screens-message">
+                    <div className="no-screens-message" activity="no screens available message">
                       {selectedTask ? (
-                        <div>
-                          <h3>No screens found for task: {getTasksFromTrial()[selectedTask]}</h3>
-                          <p>This task doesn't have any associated screens in the task screen mapping.</p>
+                        <div activity="no screens for selected task message">
+                          <h3 activity="no screens title">No screens found for task: {getTasksFromTrial()[selectedTask]}</h3>
+                          <p activity="no screens explanation">This task doesn't have any associated screens in the task screen mapping.</p>
                         </div>
                       ) : (
-                        <div>
-                          <h3>No screens available</h3>
-                          <p>Select a task from the left panel to view its associated screens.</p>
+                        <div activity="no screens general message">
+                          <h3 activity="no screens general title">No screens available</h3>
+                          <p activity="select task instruction">Select a task from the left panel to view its associated screens.</p>
                         </div>
                       )}
                     </div>
@@ -810,25 +819,27 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
         </div>
         
         {/* Generate UI Button and Quality Dropdown - positioned at lower left */}
-        <div className="ui-view-generate-controls">
+        <div className="ui-view-generate-controls" activity="UI generation controls in grid view">
           <select
             className="ui-view-quality-dropdown"
             value={qualityMode}
             onChange={(e) => setQualityMode(e.target.value)}
             disabled={isGenerating}
+            activity="select UI generation quality mode"
           >
-            <option value="fast">Fast</option>
-            <option value="high">HQ</option>
+            <option value="fast" activity="fast generation mode option">Fast</option>
+            <option value="high" activity="high quality generation mode option">HQ</option>
           </select>
           
           <button 
             className="ui-view-generate-btn"
             onClick={handleGenerateUI}
             disabled={isGenerating}
+            activity="generate UI code for all screens"
           >
             {isGenerating ? (
               <>
-                <div className="spinner"></div>
+                <div className="spinner" activity="generation loading spinner"></div>
                 Generating ...
               </>
             ) : (
