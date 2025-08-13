@@ -134,10 +134,10 @@ const Card = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
-      activity="design card container with drag and drop functionality"
+      activity="design card"
     >
-      <div className="design-card-header" activity="design card header section">
-        <h3 className="design-card-title" activity="design card title display">
+      <div className="design-card-header" >
+        <h3 className="design-card-title" >
           {design.design_name || design.name || `Design ${index + 1}`}
         </h3>
         <button 
@@ -149,46 +149,27 @@ const Card = ({
           <Star size={16} />
         </button>
       </div>
-      <div className="design-card-content" activity="design card content section">
+      <div className="design-card-content" activity="design card content">
         {design.core_concept ? (
-          <div className="design-card-description" activity="design card core concept display">
+          <div className="design-card-description">
             {Array.isArray(design.core_concept) ? (
-              <ul className="core-concept-list" activity="list of core concepts">
+              <ul className="core-concept-list">
                 {design.core_concept.map((concept, i) => (
-                  <li key={i} activity="individual core concept item">{concept}</li>
+                  <li key={i}>{concept}</li>
                 ))}
               </ul>
             ) : (
-              <p activity="single core concept display">{design.core_concept}</p>
+              <p>{design.core_concept}</p>
             )}
           </div>
         ) : (
-          <p className="design-card-description" activity="design card description fallback">
+          <p className="design-card-description">
             {design.description || 'No description available'}
           </p>
         )}
-        {/* {design.key_characteristics && (
-          <div className="design-card-characteristics">
-            <h4>Key Characteristics:</h4>
-            <ul>
-              {Array.isArray(design.key_characteristics) 
-                ? design.key_characteristics.map((char, i) => (
-                    <li key={i}>{char}</li>
-                  ))
-                : <li>{design.key_characteristics}</li>
-              }
-            </ul>
-          </div>
-        )}
-        {design.rationale && (
-          <div className="design-card-rationale">
-            <h4>Rationale:</h4>
-            <p>{design.rationale}</p>
-          </div>
-        )} */}
       </div>
-      <div className="design-card-footer" activity="design card footer with action buttons">
-        <div className="design-card-actions" activity="design card action buttons container">
+      <div className="design-card-footer">
+        <div className="design-card-actions">
           <button 
             className="control-btn"
             onClick={() => onOpenUIView(design)}
@@ -202,7 +183,7 @@ const Card = ({
               className="control-btn"
               onClick={() => onRemoveDesignCard(design.id || index)}
               title="Remove design"
-              activity="remove design card from canvas"
+              activity="remove design card"
             >
               <Trash2 size={16} />
             </button>

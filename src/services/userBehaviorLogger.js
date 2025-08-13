@@ -208,9 +208,13 @@ class UserBehaviorLogger {
   }
 
   handleEvent(event) {
-    const activity = this.getActivityDescription(event.target)
+    if(event.target == undefined || event.target == null) {
+        return
+    }
+
+    const {target, activity} = this.getActivityDescription(event.target) || {target: event.target, activity: null}
     if (activity) {
-      this.logEvent(event.type, event.target, activity)
+      this.logEvent(event.type, target, activity)
     } else {
       // Log filtered events for debugging (optional)
       console.log(`🔍 Event filtered (no activity attribute): ${event.type} on ${event.target.tagName?.toLowerCase()}`)
@@ -223,13 +227,13 @@ class UserBehaviorLogger {
     }
 
     // Read the activity attribute directly from the target element
-    let activityAttribute = target.getAttribute('activity')
+    let activity = target.getAttribute ? target.getAttribute('activity') : null
     
-    if (!activityAttribute) {
-      activityAttribute = this.getActivityDescription(target.parentElement) // No activity attribute, will be filtered out
+    if (!activity) {
+        return this.getActivityDescription(target.parentElement) // No activity attribute, will be filtered out
     }
     
-    return activityAttribute
+    return {target, activity}
   }
 
   logEvent(eventType, target, activity) {
@@ -357,7 +361,19 @@ class UserBehaviorLogger {
     }
   }
 
+getCircularReplacer() {
+    const seen = new WeakSet();
+    return (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) return "[Circular]";
+        seen.add(value);
+      }
+      return value;
+    };
+  }
+
   storeInLocalStorage(events) {
+    let eventsJson = null
     try {
       const key = `user_behavior_${this.sessionId}`
       
@@ -367,7 +383,8 @@ class UserBehaviorLogger {
       
       // Combine existing and new events
       const allEvents = [...existingEvents, ...events]
-      const eventsJson = JSON.stringify(allEvents)
+      eventsJson = JSON.stringify(allEvents, this.getCircularReplacer(), 2)
+    // eventsJson = JSON.stringify(allEvents)
       
       // Check localStorage size limit (usually 5-10MB)
       if (eventsJson.length > 5 * 1024 * 1024) {
@@ -379,7 +396,7 @@ class UserBehaviorLogger {
         localStorage.setItem(key, JSON.stringify(allEvents))
       }
     } catch (error) {
-      console.error('Failed to store user behavior log in localStorage:', error)
+      console.error('Failed to store user behavior log in localStorage:', error, eventsJson)
     }
   }
 

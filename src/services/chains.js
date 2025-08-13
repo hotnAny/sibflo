@@ -793,7 +793,7 @@ const _generateDesignSpaceFromIdeas = async (input) => {
     const designSpaceRaw = await adaptedModels.modelLite.invoke(prompt);
 
     // Log the raw output for debugging
-    console.log('🔗 Chain: _generateDesignSpaceFromIdeas - RAW OUTPUT FROM LLM:', designSpaceRaw);
+    console.log('🔗 Chain: _generateDesignSpaceFromIdeas - RAW OUTPUT FROM LLM:', {designSpaceRaw: designSpaceRaw});
 
     // Parse the output as JSON
     const designSpace = _parseJsonString(designSpaceRaw, "design space");

@@ -541,9 +541,9 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                        getScreenTitle(index)
     
     return (
-      <div className="ui-view-overlay" activity="UI view fullscreen overlay">
-        <div className="ui-view-fullscreen" activity="UI view fullscreen container">
-          <div className="ui-view-fullscreen-header" activity="fullscreen header with navigation buttons">
+      <div className="ui-view-overlay" activity="UI view full screen">
+        <div className="ui-view-fullscreen" >
+          <div className="ui-view-fullscreen-header">
             <button className="ui-view-back-btn" onClick={handleBackToGrid} activity="return to screen grid view">
               <ArrowLeft size={20} />
             </button>
@@ -553,18 +553,17 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             </button>
           </div>
           
-          <div className="ui-view-fullscreen-content" activity="fullscreen content area">
+          <div className="ui-view-fullscreen-content">
             {/* Left Sidebar - Tasks (always visible) */}
-            <div className="ui-view-sidebar" activity="tasks sidebar navigation">
+            <div className="ui-view-sidebar">
               <h3 activity="tasks section title">Tasks</h3>
-              <div className="task-list" activity="list of available tasks">
+              <div className="task-list" activity="list of tasks">
                 {(() => {
                   // Use data from design object (populated by retrieveDesignData)
                   const taskScreenMapping = design?.taskScreenMapping
                   
                   if (taskScreenMapping) {
                     return Object.entries(taskScreenMapping).map(([, ], index) => {
-                      // console.log('🎯 Rendering task:', index, 'with mapping:', taskScreenMapping[index])
                       
                       // Get tasks from the current trial
                       const tasksFromTrial = getTasksFromTrial()
@@ -577,21 +576,21 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                           key={index} 
                           className={`task-item ${selectedTask === index ? 'task-item-selected' : ''}`}
                           onClick={() => handleTaskClick(index)}
-                          activity="select task for screen filtering"
+                          activity="select task to view task flow"
                         >
                           {taskDescription}
                         </div>
                       )
                     })
                   } else {
-                    return <div className="task-item" activity="default task placeholder">Plan a weekend of activities for my child</div>
+                    return <div className="task-item">No tasks provided</div>
                   }
                 })()}
               </div>
             </div>
 
-            <div className="ui-view-fullscreen-main" activity="fullscreen main content area">
-              <div className="ui-view-fullscreen-svg" activity="fullscreen SVG rendering area">
+            <div className="ui-view-fullscreen-main" activity="fullscreen ui code rendering area">
+              <div className="ui-view-fullscreen-svg">
                 <div className="svg-render-fullscreen" activity="fullscreen SVG content display">
                   {renderSVG(screenCode)}
                 </div>
@@ -604,10 +603,10 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                 {/* Navigation buttons */}
                 {showNavigation && (
                   <div className="screen-navigation" activity="screen navigation controls">
-                    <div className="navigation-info" activity="screen navigation information">
+                    <div className="navigation-info">
                       <span activity="current screen position indicator">Screen {currentScreenIndex + 1} of {currentTaskScreens.length}</span>
                     </div>
-                    <div className="navigation-buttons" activity="screen navigation button container">
+                    <div className="navigation-buttons">
                       <button 
                         className={`nav-btn nav-btn-prev ${!previousScreen ? 'nav-btn-disabled' : ''}`}
                         onClick={() => handleNavigation('previous')}
@@ -633,7 +632,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             </div>
             
             {/* Generate UI Button and Quality Dropdown - positioned at lower left in fullscreen view */}
-            <div className="ui-view-generate-controls" activity="UI generation controls in fullscreen view">
+            <div className="ui-view-generate-controls">
               <select
                 className="ui-view-quality-dropdown"
                 value={qualityMode}
@@ -649,11 +648,11 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                 className="ui-view-generate-btn"
                 onClick={handleGenerateUI}
                 disabled={isGenerating}
-                activity="generate UI code for current screen"
+                activity="generate UI code"
               >
                 {isGenerating ? (
                   <>
-                    <div className="spinner" activity="generation loading spinner"></div>
+                    <div className="spinner"></div>
                     Generating ...
                   </>
                 ) : (
@@ -691,7 +690,6 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                 
                 if (taskScreenMapping) {
                   return Object.entries(taskScreenMapping).map(([, ], index) => {
-                    // console.log('🎯 Rendering task:', index, 'with mapping:', taskScreenMapping[index])
                     
                     // Get tasks from the current trial
                     const tasksFromTrial = getTasksFromTrial()

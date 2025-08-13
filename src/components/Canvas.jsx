@@ -293,7 +293,7 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
   }, [isDragging])
 
   return (
-    <div className="canvas-container" activity="canvas main container">
+    <div className="canvas-container" activity="canvas container">
       <div 
         ref={canvasRef}
         className="canvas"
@@ -305,20 +305,20 @@ const Canvas = ({ designCards = [], onRemoveDesignCard, onToggleFavorite, onDesi
         }}
         activity="canvas area with zoom and pan functionality"
       >
-        <div className="canvas-grid" activity="canvas grid background">
+        <div className="canvas-grid">
           {/* Grid pattern */}
-          <svg className="grid-pattern" width="100%" height="100%" activity="grid pattern SVG overlay">
+          <svg className="grid-pattern" width="100%" height="100%">
             <defs activity="SVG definitions for grid pattern">
-              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse" activity="grid pattern definition">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="1" activity="grid line path"/>
+              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" activity="grid pattern background rectangle"/>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
           </svg>
         </div>
         
         {/* Design Cards */}
-        <div className="canvas-content" activity="canvas content area for design cards">
+        <div className="canvas-content" activity="canvas for design cards">
           {designCards.map((design, index) => {
             const defaultPosition = getDesignCardPosition(index)
             const cardId = design.id || index
