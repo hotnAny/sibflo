@@ -15,14 +15,8 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
   const [apiKey, setApiKey] = useState('')
   const [isApiKeySet, setIsApiKeySet] = useState(false)
   const [apiKeySaved, setApiKeySaved] = useState(false)
-  // const [selectedModel, setSelectedModel] = useState('modelFlash')
-  // const [prompt, setPrompt] = useState('')
-  // const [response, setResponse] = useState('')
-  // const [isLoading, setIsLoading] = useState(false)
-  // const [error, setError] = useState('')
   const [isGeneratingDesignSpace, setIsGeneratingDesignSpace] = useState(false)
   const [sessions, setSessions] = useState([])
-  const [sessionStats, setSessionStats] = useState(null)
   const [isLoadingSessions, setIsLoadingSessions] = useState(false)
 
   // Load API key from localStorage on component mount
@@ -51,12 +45,12 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
   const loadSessions = async () => {
     setIsLoadingSessions(true)
     try {
-      const [allSessions, stats] = await Promise.all([
+      const [allSessions] = await Promise.all([
         sessionManager.getAllSessions(),
-        sessionManager.getSessionStats()
+        // sessionManager.getSessionStats()
       ])
       setSessions(allSessions)
-      setSessionStats(stats)
+      // setSessionStats(stats)
     } catch (error) {
       console.error('Failed to load sessions:', error)
     } finally {
@@ -130,55 +124,6 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
       window.location.reload()
     }, 500)
   }
-
-  // const handleModelSubmit = async (e) => {
-  //   e.preventDefault()
-  //   if (!prompt.trim()) return
-
-  //   setIsLoading(true)
-  //   setError('')
-  //   setResponse('')
-
-  //   try {
-  //     if (!modelService.isInitialized()) {
-  //       throw new Error('Model service not initialized. Please set your API key first.')
-  //     }
-
-  //     const result = await modelService.generateContent(selectedModel, prompt.trim())
-  //     setResponse(result.text)
-  //   } catch (error) {
-  //     setError(error.message)
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-  // const handleStreamSubmit = async (e) => {
-  //   e.preventDefault()
-  //   if (!prompt.trim()) return
-
-  //   setIsLoading(true)
-  //   setError('')
-  //   setResponse('')
-
-  //   try {
-  //     if (!modelService.isInitialized()) {
-  //       throw new Error('Model service not initialized. Please set your API key first.')
-  //     }
-
-  //     await modelService.generateContentStream(
-  //       selectedModel,
-  //       prompt.trim(),
-  //       (chunk, fullText) => {
-  //         setResponse(fullText)
-  //       }
-  //     )
-  //   } catch (error) {
-  //     setError(error.message)
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
 
   const addTask = () => {
     onFormDataChange({
@@ -299,13 +244,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
 
   return (
     <>
-      <button className={`panel-toggle ${isOpen ? 'open' : ''}`} onClick={onToggle} activity="toggle left panel visibility">
+      <button className={`panel-toggle ${isOpen ? 'open' : ''}`} onClick={onToggle} activity="toggle left panel">
         {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
       </button>
       
       <div className={`left-panel ${isOpen ? 'open' : ''}`} activity="left panel container">
-        <div className="panel-content" activity="panel content wrapper">
-          <div className="tabs" activity="tab navigation container">
+        <div className="panel-content" activity="left panel content wrapper">
+          <div className="tabs" activity="left panel tab navigation container">
             <button 
               className={`tab ${activeTab === 'design-space' ? 'active' : ''}`} 
               onClick={() => setActiveTab('design-space')}
@@ -316,7 +261,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
             <button 
               className={`tab ${activeTab === 'gemini' ? 'active' : ''}`} 
               onClick={() => setActiveTab('gemini')}
-              activity="switch to gemini settings tab"
+              activity="switch to settings tab"
             >
               Settings
             </button>
@@ -327,8 +272,8 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
               {/* <h2>Design Space</h2> */}
               <form onSubmit={handleSubmit} className="design-space-form" activity="design space generation form">
                 {/* Context Section */}
-                <div className="form-section" activity="context input section">
-                  <label className="section-label" activity="context section label">Context</label>
+                <div className="form-section" activity="input context section">
+                  <label className="section-label">Context</label>
                   <textarea
                     name="context"
                     value={formData.context}
@@ -336,13 +281,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     className="form-textarea"
                     placeholder="Provide any relevant contextual information that can help the model understand your design needs ..."
                     rows="4"
-                    activity="input contextual information for design needs"
+                    activity="input context"
                   />
                 </div>
 
                 {/* User Section */}
-                <div className="form-section" activity="user input section">
-                  <label className="section-label" activity="user section label">User</label>
+                <div className="form-section" activity="input user section">
+                  <label className="section-label">User</label>
                   <textarea
                     name="user"
                     value={formData.user}
@@ -350,13 +295,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     className="form-textarea"
                     placeholder="Describe the target user, their characteristics, needs, and pain points..."
                     rows="2"
-                    activity="input target user description and characteristics"
+                    activity="input user"
                   />
                 </div>
 
                 {/* Goal Section */}
-                <div className="form-section" activity="goal input section">
-                  <label className="section-label" activity="goal section label">Goal</label>
+                <div className="form-section" activity="input goal section">
+                  <label className="section-label">Goal</label>
                   <textarea
                     name="goal"
                     value={formData.goal}
@@ -364,13 +309,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     className="form-textarea"
                     placeholder="What is the main objective or outcome the user wants to achieve?"
                     rows="2"
-                    activity="input main objective or outcome description"
+                    activity="input goal"
                   />
                 </div>
 
                 {/* Tasks Section */}
-                <div className="form-section" activity="tasks input section">
-                  <label className="section-label" activity="tasks section label">Tasks</label>
+                <div className="form-section" activity="input tasks section">
+                  <label className="section-label">Tasks</label>
                   {formData.tasks.map((task, index) => (
                     <div key={index} className="task-item" activity="individual task input container">
                       <input
@@ -379,27 +324,27 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                         onChange={(e) => updateTask(index, e.target.value)}
                         className="form-input"
                         placeholder="What'd users do to achieve the goal?"
-                        activity="input information about task"
+                        activity="input task"
                       />
                       <button
                         type="button"
                         onClick={() => removeTask(index)}
                         className="remove-btn"
-                        activity="remove task from list"
+                        activity="remove task"
                       >
                         <X size={16} />
                       </button>
                     </div>
                   ))}
-                  <button type="button" onClick={addTask} className="add-link" activity="add new task to list">
+                  <button type="button" onClick={addTask} className="add-link" activity="add new task">
                     <Plus size={16} />
                     Add task
                   </button>
                 </div>
 
                 {/* Examples Section */}
-                <div className="form-section" activity="examples input section">
-                  <label className="section-label" activity="examples section label">Examples</label>
+                <div className="form-section" activity="input examples section">
+                  <label className="section-label">Examples</label>
                   {formData.examples.map((example, index) => (
                     <div key={index} className="task-item" activity="individual example input container">
                       <input
@@ -408,27 +353,27 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                         onChange={(e) => updateExample(index, e.target.value)}
                         className="form-input"
                         placeholder="Provide a publicly accessible link"
-                        activity="input publicly accessible example link"
+                        activity="input example"
                       />
                       <button
                         type="button"
                         onClick={() => removeExample(index)}
                         className="remove-btn"
-                        activity="remove example from list"
+                        activity="remove example"
                       >
                         <X size={16} />
                       </button>
                     </div>
                   ))}
-                  <button type="button" onClick={addExample} className="add-link" activity="add new example to list">
+                  <button type="button" onClick={addExample} className="add-link" activity="add example">
                     <Plus size={16} />
                     Add example
                   </button>
                 </div>
 
                 {/* Comments Section */}
-                <div className="form-section" activity="comments input section">
-                  <label className="section-label" activity="comments section label">Comments</label>
+                <div className="form-section" activity="input comments section">
+                  <label className="section-label">Comments</label>
                   <textarea
                     name="comments"
                     value={formData.comments}
@@ -436,11 +381,11 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     className="form-textarea"
                     placeholder="Enter comments..."
                     rows="3"
-                    activity="input additional comments or notes"
+                    activity="input comments"
                   />
                 </div>
 
-                <button type="submit" className="create-btn" disabled={!isApiKeySet || isGeneratingDesignSpace} activity="submit form to generate design space">
+                <button type="submit" className="create-btn" disabled={!isApiKeySet || isGeneratingDesignSpace} activity="generate design space">
                   {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Palette size={16} />}
                   &nbsp;&nbsp;
                   {isGeneratingDesignSpace ? 'Generating...' : 'Generate Design Space'}
@@ -452,10 +397,10 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
           {activeTab === 'gemini' && (
             <>
               {/* <h2>Settings</h2> */}
-              <div className="gemini-settings" activity="gemini settings configuration">
+              <div className="gemini-settings" activity="settings configuration">
                 {/* API Key Section */}
                 <div className="form-section" activity="api key configuration section">
-                  <label className="section-label" activity="api key section label">
+                  <label className="section-label">
                     <Key size={16} />
                     API Key
                   </label>
@@ -500,32 +445,6 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     <Activity size={16} />
                     Logged Sessions
                   </label>
-                  
-                  {/* Session Statistics */}
-                  {/* {sessionStats && (
-                    <div className="session-stats" activity="session statistics display">
-                      <div className="stat-item">
-                        <span className="stat-label">Total Sessions:</span>
-                        <span className="stat-value">{sessionStats.totalSessions}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">User Behavior:</span>
-                        <span className="stat-value">{sessionStats.userBehaviorSessions}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Trials:</span>
-                        <span className="stat-value">{sessionStats.trialSessions}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Total Events:</span>
-                        <span className="stat-value">{sessionStats.totalEvents}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Total Designs:</span>
-                        <span className="stat-value">{sessionStats.totalDesigns}</span>
-                      </div>
-                    </div>
-                  )} */}
 
                   {/* Session Actions */}
                   <div className="session-actions" activity="session management actions">
