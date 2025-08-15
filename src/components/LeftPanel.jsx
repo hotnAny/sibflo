@@ -273,13 +273,13 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
               <form onSubmit={handleSubmit} className="design-space-form" activity="design space generation form">
                 {/* Context Section */}
                 <div className="form-section" activity="input context section">
-                  <label className="section-label">Context</label>
+                  <label className="section-label">Context<span style={{color: 'red'}}>*</span></label>
                   <textarea
                     name="context"
                     value={formData.context}
                     onChange={handleInputChange}
                     className="form-textarea"
-                    placeholder="Provide any relevant contextual information that can help the model understand your design needs ..."
+                    placeholder="Mobile or desktop app? And any other relevant information to help the model understand your design needs ..."
                     rows="4"
                     activity="input context"
                   />
@@ -287,7 +287,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
 
                 {/* User Section */}
                 <div className="form-section" activity="input user section">
-                  <label className="section-label">User</label>
+                  <label className="section-label">User<span style={{color: 'red'}}>*</span></label>
                   <textarea
                     name="user"
                     value={formData.user}
@@ -301,7 +301,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
 
                 {/* Goal Section */}
                 <div className="form-section" activity="input goal section">
-                  <label className="section-label">Goal</label>
+                  <label className="section-label">Goal<span style={{color: 'red'}}>*</span></label>
                   <textarea
                     name="goal"
                     value={formData.goal}
@@ -315,7 +315,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
 
                 {/* Tasks Section */}
                 <div className="form-section" activity="input tasks section">
-                  <label className="section-label">Tasks</label>
+                  <label className="section-label">Tasks<span style={{color: 'red'}}>*</span></label>
                   {formData.tasks.map((task, index) => (
                     <div key={index} className="task-item" activity="individual task input container">
                       <input
