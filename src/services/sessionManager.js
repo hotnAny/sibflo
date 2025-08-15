@@ -191,7 +191,10 @@ class SessionManager {
       
       const link = document.createElement('a')
       link.href = URL.createObjectURL(dataBlob)
-      link.download = `sibflo-sessions-${new Date().toISOString().split('T')[0]}.json`
+      const now = new Date()
+      const dateStr = now.toISOString().split('T')[0]
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+      link.download = `sibflo-sessions-${dateStr}-${timeStr}.json`
       link.click()
       
       URL.revokeObjectURL(link.href)
@@ -215,7 +218,10 @@ class SessionManager {
       
       const link = document.createElement('a')
       link.href = URL.createObjectURL(dataBlob)
-      link.download = `sibflo-session-${sessionId}-${new Date().toISOString().split('T')[0]}.json`
+      const now = new Date()
+      const dateStr = now.toISOString().split('T')[0]
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+      link.download = `sibflo-session-${sessionId}-${dateStr}-${timeStr}.json`
       link.click()
       
       URL.revokeObjectURL(link.href)
