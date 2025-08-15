@@ -170,7 +170,31 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isApiKeySet) {
-      // setError('Please set your API key first.')
+      alert('Please set your API key first.')
+      return
+    }
+
+    // Validate required fields
+    const missingFields = []
+    
+    if (!formData.context || formData.context.trim() === '') {
+      missingFields.push('Context')
+    }
+    
+    if (!formData.user || formData.user.trim() === '') {
+      missingFields.push('User')
+    }
+    
+    if (!formData.goal || formData.goal.trim() === '') {
+      missingFields.push('Goal')
+    }
+    
+    if (!formData.tasks || formData.tasks.length === 0 || formData.tasks.every(task => !task || task.trim() === '')) {
+      missingFields.push('Tasks (at least one task is required)')
+    }
+
+    if (missingFields.length > 0) {
+      alert(`Please fill in the following required fields:\n\n${missingFields.join('\n')}`)
       return
     }
 
