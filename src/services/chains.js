@@ -456,11 +456,15 @@ const _generateUICodeRevision = async (input) => {
         throw new Error('input must contain originalUICode and critiques');
     }
     
+    // Ensure userComments is included in the input passed to the prompts
+    const userCommentsForPrompt = input.userComments || "No specific user comments provided";
+    
     // Step 1: Translate critiques into concrete changes
     const adaptedModels = createAdaptedModels();
     const changesPrompt = await promptCritiqueToChanges.format({
         originalUICode: input.originalUICode,
-        critiques: JSON.stringify(input.critiques, null, 2)
+        critiques: JSON.stringify(input.critiques, null, 2),
+        userComments: userCommentsForPrompt
     });
     const changesResponse = await adaptedModels.modelLite.invoke(changesPrompt);
 
@@ -477,7 +481,8 @@ const _generateUICodeRevision = async (input) => {
     // Step 2: Apply the changes to the SVG
     const revisionPrompt = await promptApplyChangesToSVG.format({
         originalUICode: input.originalUICode,
-        changes: JSON.stringify(changes, null, 2)
+        changes: JSON.stringify(changes, null, 2),
+        userComments: userCommentsForPrompt
     });
     const revision = await adaptedModels.modelFlash.invoke(revisionPrompt);
 
@@ -670,9 +675,11 @@ const _generateOverallDesigns = async (input) => {
     
     // Ensure designParameters is included in the input passed to the prompt
     const designParametersForPrompt = input.designParameters || "No specific design parameters provided";
+    const userCommentsForPrompt = input.userComments || "No specific user comments provided";
     
     const promptInput = {
-        designParameters: designParametersForPrompt
+        designParameters: designParametersForPrompt,
+        userComments: userCommentsForPrompt
     };
     
     const adaptedModels = createAdaptedModels();

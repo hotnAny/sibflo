@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Code, ArrowLeft, ArrowRight } from 'lucide-react'
 import { stateStorage } from '../services/stateStorage'
 import './UIView.css'
@@ -13,6 +13,9 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
   const [isGenerating, setIsGenerating] = useState(false)
   const [qualityMode, setQualityMode] = useState('fast') // 'fast' or 'high'
   const [cardZIndices, setCardZIndices] = useState({}) // Track z-index for each card
+  const [showCommentsBox, setShowCommentsBox] = useState(false)
+  const [comments, setComments] = useState('')
+  const commentsInputRef = useRef(null)
 
   // Internal function to generate UI codes and update design
   const generateUICodes = async (designToUpdate, qualityModeToUse = 'fast') => {
@@ -72,6 +75,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
         screenDescriptions: screenDescriptions,
         critiques: [],
         qualityMode: qualityModeToUse,
+        userComments: comments,
         onProgress: (codes, index, code) => {
           // console.log(`📝 Progress: Screen ${index + 1} code generated (${qualityModeToUse} mode)`)
           // Update the UI immediately when a screen's code is generated
@@ -90,7 +94,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
           screens: screensToUse.map((screen, index) => ({
             ...screen,
             ui_code: generatedUICodes[index] || ''
-          }))
+          })),
+          ui_generation_comments: comments
         }
         
         // console.log('🎨 Final design update with UI codes:', {
@@ -184,6 +189,23 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
       // Your mounted code goes here
     }
   }, [isOpen, design, isUIViewStateLoaded, selectedTask])
+
+  // Click outside handler for comments box
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showCommentsBox && commentsInputRef.current && !commentsInputRef.current.contains(event.target)) {
+        setShowCommentsBox(false)
+      }
+    }
+
+    if (showCommentsBox) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCommentsBox])
 
   const getScreenTitle = (index) => {
     // Use screens from design.screens if available, otherwise use the screens prop
@@ -459,7 +481,7 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
       } else {
         // console.log('🎯 Selected screen:', selectedScreen)
         const { generateSingleScreenUI } = await import('../services/generationService')
-        const updatedUICode = await generateSingleScreenUI(selectedScreen.screen, qualityMode)
+        const updatedUICode = await generateSingleScreenUI(selectedScreen.screen, qualityMode, comments)
         // console.log('🎯 Updated UICode:', updatedUICode)
         
         // Update the screen's UI code in the design object
@@ -478,7 +500,8 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
                 }
               }
               return designScreen
-            })
+            }),
+            ui_generation_comments: comments
           }
           
           // Update the local state to trigger re-render
@@ -633,35 +656,60 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
             
             {/* Generate UI Button and Quality Dropdown - positioned at lower left in fullscreen view */}
             <div className="ui-view-generate-controls">
-              <select
-                className="ui-view-quality-dropdown"
-                value={qualityMode}
-                onChange={(e) => setQualityMode(e.target.value)}
-                disabled={isGenerating}
-                activity="select UI generation quality mode"
-              >
-                <option value="fast" activity="fast generation mode option">Fast</option>
-                <option value="high" activity="high quality generation mode option">HQ</option>
-              </select>
-              
-              <button 
-                className="ui-view-generate-btn"
-                onClick={handleGenerateUI}
-                disabled={isGenerating}
-                activity="generate UI code"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="spinner"></div>
-                    Generating ...
-                  </>
-                ) : (
-                  <>
-                    <Code size={16} style={{ color: 'white' }} />
-                    Generate UI
-                  </>
+              <div className="submit-section" activity="submit button and floating comments container">
+                {showCommentsBox && (
+                  <div className="floating-comments-box" activity="floating comments input">
+                    <textarea
+                      ref={commentsInputRef}
+                      value={comments}
+                      onChange={(e) => setComments(e.target.value)}
+                      className="comments-textarea"
+                      placeholder="Add comments ..."
+                      rows="3"
+                      activity="user comments for UI generation"
+                    />
+                  </div>
                 )}
-              </button>
+                <div className="controls-wrapper">
+                  <select
+                    className="ui-view-quality-dropdown"
+                    value={qualityMode}
+                    onChange={(e) => setQualityMode(e.target.value)}
+                    disabled={isGenerating}
+                    activity="select UI generation quality mode"
+                  >
+                    <option value="fast" activity="fast generation mode option">Fast</option>
+                    <option value="high" activity="high quality generation mode option">HQ</option>
+                  </select>
+                  
+                  <button 
+                    className="ui-view-generate-btn"
+                    onClick={handleGenerateUI}
+                    disabled={isGenerating}
+                    onMouseEnter={() => {
+                      setTimeout(() => {
+                        setShowCommentsBox(true)
+                        if (commentsInputRef.current) {
+                          commentsInputRef.current.focus()
+                        }
+                      }, 2000)
+                    }}
+                    activity="generate UI code"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="spinner"></div>
+                        Generating ...
+                      </>
+                    ) : (
+                      <>
+                        <Code size={16} style={{ color: 'white' }} />
+                        Generate UI
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -818,35 +866,60 @@ const UIView = ({ isOpen, onClose, design, screens = [], currentTrialId, onDesig
         
         {/* Generate UI Button and Quality Dropdown - positioned at lower left */}
         <div className="ui-view-generate-controls" activity="UI generation controls in grid view">
-          <select
-            className="ui-view-quality-dropdown"
-            value={qualityMode}
-            onChange={(e) => setQualityMode(e.target.value)}
-            disabled={isGenerating}
-            activity="select UI generation quality mode"
-          >
-            <option value="fast" activity="fast generation mode option">Fast</option>
-            <option value="high" activity="high quality generation mode option">HQ</option>
-          </select>
-          
-          <button 
-            className="ui-view-generate-btn"
-            onClick={handleGenerateUI}
-            disabled={isGenerating}
-            activity="generate UI code for all screens"
-          >
-            {isGenerating ? (
-              <>
-                <div className="spinner" activity="generation loading spinner"></div>
-                Generating ...
-              </>
-            ) : (
-              <>
-                <Code size={16} style={{ color: 'white' }} />
-                Generate UI
-              </>
+          <div className="submit-section" activity="submit button and floating comments container">
+            {showCommentsBox && (
+              <div className="floating-comments-box" activity="floating comments input">
+                <textarea
+                  ref={commentsInputRef}
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  className="comments-textarea"
+                  placeholder="Add comments ..."
+                  rows="3"
+                  activity="input comments in floating box"
+                />
+              </div>
             )}
-          </button>
+            <div className="controls-wrapper">
+              <select
+                className="ui-view-quality-dropdown"
+                value={qualityMode}
+                onChange={(e) => setQualityMode(e.target.value)}
+                disabled={isGenerating}
+                activity="select UI generation quality mode"
+              >
+                <option value="fast" activity="fast generation mode option">Fast</option>
+                <option value="high" activity="high quality generation mode option">HQ</option>
+              </select>
+              
+              <button 
+                className="ui-view-generate-btn"
+                onClick={handleGenerateUI}
+                disabled={isGenerating}
+                onMouseEnter={() => {
+                  setTimeout(() => {
+                    setShowCommentsBox(true)
+                    if (commentsInputRef.current) {
+                      commentsInputRef.current.focus()
+                    }
+                  }, 2000)
+                }}
+                activity="generate UI code for all screens"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="spinner" activity="generation loading spinner"></div>
+                    Generating ...
+                  </>
+                ) : (
+                  <>
+                    <Code size={16} style={{ color: 'white' }} />
+                    Generate UI
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
