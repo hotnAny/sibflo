@@ -252,6 +252,78 @@ export const promptTaskScreenMapping = PromptTemplate.fromTemplate(
   }}
 `);
 
+// export const promptSVGCodeGeneration = PromptTemplate.fromTemplate(
+//   `ROLE & GOAL:
+// You are an expert UI wire-framing assistant. Produce ONE complete, valid SVG that looks like a hand-drawn wireframe of the screen described below. Clarity > polish.
+
+// SCREEN DESCRIPTION:
+// {screenDescription}
+
+// MUST-HAVE ELEMENTS & BEHAVIORS:
+// - Include every UI element listed in "elements".
+// - Implement every behavior in "functionality".
+
+// CANVAS & GRID:
+// - Output a single <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="{{shortTitle}}">
+// - Use an 8px spacing grid. Page margin = 24, gutters = 16.
+// - Keep all content within the viewBox (no negative coords or off-canvas).
+
+// TEXT WRAP/TRUNCATE (HARD REQUIREMENT):
+// For any text inside a box:
+// - Use <text> with <tspan> line breaks (no <foreignObject>).
+// - Estimate chars/line = floor((boxWidth - 2*padding) / (0.55 * fontSize)).
+// - Line height = 1.25 * fontSize.
+// - If >3 lines would be needed, truncate the 3rd line and end with "…".
+// - Apply a clipPath to that box so overflow is hidden.
+// - For each such box, set data-wrap="true" and data-lines="N".
+
+// LAYOUT & CLARITY RULES:
+// - Group related elements with clear separation; minimum 8px gap between blocks.
+// - Avoid overlaps. If unsure, stack vertically and increase spacing.
+// - Primary actions and main content must be visually prominent.
+// - Element sizes must be readable; avoid microscopic or massive elements.
+
+// STYLE & FORMAT RULES:
+// 1) Root <svg> has a proper viewBox (see above).
+// 2) Quote every attribute (x, y, width, height, d, etc.). No stray or unclosed quotes.
+// 3) Each <path> has a complete d="...".
+// 4) Inline stroke/fill only; avoid external CSS/classes.
+// 5) Font: font-family="Comic Sans MS, system-ui, sans-serif".
+// 6) Grayscale only (#000–#FFF) and transparent fills.
+// 7) Prefer basic shapes (rect, circle, line, text). Avoid complex paths unless necessary.
+// 8) Maintain a consistent stroke-width (e.g., 2) and subtle corner rounding (e.g., rx="8").
+// 9) Optional “hand-drawn” feel via slight dash array or small jitter—keep legible.
+
+// OVERFLOW CONTROL (HARD REQUIREMENT):
+// - Any text container must have a matching <clipPath> to prevent bleed.
+// - No element may extend beyond the <svg> viewBox.
+
+// PRECISION & SANITY:
+// - Use integers for x/y/width/height when possible; otherwise ≤1 decimal place.
+// - No scientific notation. No external references.
+
+// SELF-AUDIT (NON-RENDERING, REQUIRED):
+// - Include a <metadata id="qa"> JSON object summarizing:
+//   {{
+//     "elements_expected": ["..."],
+//     "elements_present": ["..."],
+//     "text_boxes": [{{"id":"...", "boxWidth":W, "fontSize":S, "lines":L, "truncated":true|false}}],
+//     "overflow_checks": {{"offCanvas":0, "overlapsAssumedAvoided":true}}
+//   }}
+// - This must reflect the final drawing.
+
+// DEBUG LAYER (NON-VISIBLE):
+// - Add <g id="debug" visibility="hidden"> with light outlines of major layout boxes to aid QA.
+
+// QUALITY CHECK:
+// - Ensure the wireframe tells a coherent user story with no overlaps, no off-canvas content, and wrapped/truncated text per rules.
+
+// OUTPUT:
+// - OUTPUT ONLY THE SVG MARKUP—no prose, no code fences.
+
+//   `
+// );
+
 export const promptSVGCodeGeneration = PromptTemplate.fromTemplate(
   `ROLE & GOAL:
 You are an expert UI wire‑framing assistant. Produce one complete, valid SVG that looks like a hand‑drawn wireframe of the screen described below.
@@ -271,7 +343,6 @@ STYLE & FORMAT RULES:
 5. Use stroke and fill attributes; avoid CSS classes.
 6. Use Comic Sans MS font and gray-scale colors only (#000 - #FFF) plus transparent fills.
 7. OUTPUT ONLY THE SVG MARKUP — no prose, no code fences.
-
   `
 );
 
@@ -428,5 +499,42 @@ export const promptApplyChangesToSVG = PromptTemplate.fromTemplate(
   - Ensure all SVG attributes are properly formatted and complete.
   - Make only the changes specified - do not add, remove, or modify other elements.
   - This is a surgical revision, not a complete regeneration.
+  `
+);
+
+export const promptTaskGeneration = PromptTemplate.fromTemplate(
+  `SYSTEM:
+  You are an expert UX designer and product strategist. Generate a single, well-defined task that a user would need to perform to achieve their goal.
+
+  ASSISTANT:
+  Based on the provided context, user information, and goal, generate one clear and actionable task that the user would need to complete.
+
+  Context: {context}
+  User: {user}
+  Goal: {goal}
+  Examples: {examples}
+  User Comments: {userComments}
+
+  Requirements:
+  - Generate exactly ONE task that is directly related to achieving the stated goal
+  - The task should be specific and actionable
+  - Consider the user's characteristics and needs
+  - The task should be appropriate for the given context (mobile/desktop app, etc.)
+  - If examples are provided, consider them for inspiration but don't limit yourself
+  - If user comments are provided, consider the feedback and preferences mentioned
+  - The task should be something that can be accomplished through a user interface
+
+  Output Format:
+  Return only the task description as a single sentence. Do not include any explanations, formatting, or additional text.
+
+  Example output format (do not include this in your response):
+  "Complete the user profile setup by filling out required personal information fields."
+
+  IMPORTANT:
+  - Return only the task description as plain text
+  - Do not include any JSON formatting, quotes, or special characters
+  - Do not include any explanations or additional context
+  - The task should be a single, clear sentence
+  - Focus on what the user needs to do, not how the interface should look
   `
 );

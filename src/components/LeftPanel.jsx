@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronRight, ChevronLeft, X, Plus, Key, Save, Check, Palette, Loader2, Download, Trash2, Activity, FileText } from 'lucide-react'
 import { modelService, GEMINI_MODELS } from '../services/model'
-import { genDesignSpace } from '../services/generationService'
+import { genDesignSpace, generateTask } from '../services/generationService'
 import { setGeminiModels } from '../services/chains'
 import { trialLogger } from '../services/trialLogger'
 import { useSessionManager } from '../contexts/AppServicesContext'
@@ -188,10 +188,6 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
     if (!formData.goal || formData.goal.trim() === '') {
       missingFields.push('Goal')
     }
-    
-    if (!formData.tasks || formData.tasks.length === 0 || formData.tasks.every(task => !task || task.trim() === '')) {
-      missingFields.push('Tasks (at least one task is required)')
-    }
 
     if (missingFields.length > 0) {
       alert(`Please fill in the following required fields:\n\n${missingFields.join('\n')}`)
@@ -207,12 +203,33 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
         throw new Error('Model service not initialized. Please set your API key first.')
       }
 
+      // Check if tasks are provided, if not generate one using modelLite
+      let tasksToUse = formData.tasks
+      if (!tasksToUse || tasksToUse.length === 0 || tasksToUse.every(task => !task || task.trim() === '')) {
+        console.log('📝 No tasks provided, generating one using modelLite...')
+        try {
+          const generatedTask = await generateTask({
+            context: formData.context,
+            user: formData.user,
+            goal: formData.goal,
+            examples: formData.examples,
+            userComments: formData.comments
+          })
+          tasksToUse = [generatedTask]
+          console.log('📝 Generated task:', generatedTask)
+        } catch (error) {
+          console.error('❌ Failed to generate task:', error)
+          // Fallback to a default task if generation fails
+          tasksToUse = ['Complete the main user goal']
+        }
+      }
+
       // Create a new trial
       const trialId = trialLogger.createTrial({
         context: formData.context,
         user: formData.user,
         goal: formData.goal,
-        tasks: formData.tasks,
+        tasks: tasksToUse,
         examples: formData.examples,
         comments: formData.comments
       })
@@ -222,7 +239,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
         context: formData.context,
         user: formData.user,
         goal: formData.goal,
-        tasks: formData.tasks,
+        tasks: tasksToUse,
         examples: formData.examples,
         userComments: formData.comments
       })
@@ -339,7 +356,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
 
                 {/* Tasks Section */}
                 <div className="form-section" activity="input tasks section">
-                  <label className="section-label">Tasks<span style={{color: 'red'}}>*</span></label>
+                  <label className="section-label">Tasks</label>
                   {formData.tasks.map((task, index) => (
                     <div key={index} className="task-item" activity="individual task input container">
                       <input
@@ -347,7 +364,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                         value={task}
                         onChange={(e) => updateTask(index, e.target.value)}
                         className="form-input"
-                        placeholder="What'd users do to achieve the goal?"
+                        placeholder="What'd users do to achieve the goal? (optional - will generate one if empty)"
                         activity="input task"
                       />
                       <button
@@ -364,6 +381,9 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     <Plus size={16} />
                     Add task
                   </button>
+                  <div className="form-help-text">
+                    Leave empty to automatically generate a task based on your context, user, and goal.
+                  </div>
                 </div>
 
                 {/* Examples Section */}

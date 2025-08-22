@@ -913,6 +913,56 @@ function generateDiverseParameterCombinations(designSpace) {
   return combinations;
 }
 
+// Generate a single task using modelLite when none are provided by the user
+export async function generateTask({ context, user, goal, examples = [], userComments = null }) {
+  const startTime = Date.now();
+  const userCommentsForPrompt = userComments || "No specific user comments provided";
+  
+  try {
+    // Import the necessary modules for model selection
+    const { createAdaptedModels } = await import('./chains.js');
+    const { promptTaskGeneration } = await import('./prompts.js');
+    
+    // Create adapted models
+    const adaptedModels = createAdaptedModels();
+    
+    // Format the prompt
+    const prompt = await promptTaskGeneration.format({
+      context,
+      user,
+      goal,
+      examples,
+      userComments: userCommentsForPrompt
+    });
+    
+    // Generate the task using modelLite
+    const response = await adaptedModels.modelLite.invoke(prompt);
+    
+    // Clean the response (remove any markdown formatting)
+    const cleanedTask = response.replace(/```[\w-]*\n|```/g, '').trim();
+    
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    
+    console.log('📋 TASK GENERATION RESULT:', {
+      task: cleanedTask,
+      duration: duration,
+      input: {
+        context,
+        user,
+        goal,
+        examples,
+        userComments: userCommentsForPrompt
+      }
+    });
+    
+    return cleanedTask;
+  } catch (error) {
+    console.error('❌ Error generating task:', error);
+    throw error;
+  }
+}
+
 // Test function to verify diverse parameter generation
 export function testDiverseParameterGeneration() {
   const mockDesignSpace = [
