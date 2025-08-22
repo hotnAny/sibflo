@@ -9,6 +9,9 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
   const [isCreatingDesign, setIsCreatingDesign] = useState(false)
   const [selectedSliders, setSelectedSliders] = useState(new Set())
   const [openDropdown, setOpenDropdown] = useState(null)
+  const [showCommentsBox, setShowCommentsBox] = useState(false)
+  const [comments, setComments] = useState('')
+  const commentsInputRef = useRef(null)
   const dropdownRefs = useRef({})
 
   // Initialize selected sliders when sliders change
@@ -29,16 +32,21 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
           setOpenDropdown(null)
         }
       }
+      
+      // Handle comments box click outside
+      if (showCommentsBox && commentsInputRef.current && !commentsInputRef.current.contains(event.target)) {
+        setShowCommentsBox(false)
+      }
     }
 
-    if (openDropdown) {
+    if (openDropdown || showCommentsBox) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [openDropdown])
+  }, [openDropdown, showCommentsBox])
 
   const handleSliderChange = (id, value) => {
     onUpdateSlider(id, parseInt(value))
@@ -164,7 +172,10 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
       //   })
       // }
       
-      const designs = await genOverallDesigns({ designParameters: designParametersStructured })
+      const designs = await genOverallDesigns({ 
+        designParameters: designParametersStructured,
+        userComments: comments
+      })
       
       if (designs && Array.isArray(designs) && designs.length > 0) {
         // Randomly pick one of the designs
@@ -200,7 +211,8 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
           design_parameters: designParametersForLogging,
           design_parameters_structured: designParametersStructured, // Add structured format for reference
           screens: screenDescriptions,
-          taskScreenMapping: taskScreenMapping
+          taskScreenMapping: taskScreenMapping,
+          user_comments: comments
         }
         
         console.log('🎨 Generated enhanced design:', enhancedDesign)
@@ -364,24 +376,47 @@ const FloatingSliders = ({ sliders, onUpdateSlider, onDesignCreated, currentTria
         
         {/* Fixed Create Design Button - positioned relative to main container */}
         {sliders.length > 0 && (
-          <button 
-            className="floating-create-design-btn"
-            onClick={handleCreateDesign}
-            disabled={isCreatingDesign || sliders.length === 0}
-            activity="create design"
-          >
-            {isCreatingDesign ? (
-              <>
-                <div className="spinner"></div>
-                Creating Design...
-              </>
-            ) : (
-              <>
-                <Sparkles size={16} />
-                Create Design
-              </>
+          <div className="submit-section" activity="submit button and floating comments container">
+            {showCommentsBox && (
+              <div className="floating-comments-box" activity="floating comments input">
+                <textarea
+                  ref={commentsInputRef}
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  className="comments-textarea"
+                  placeholder="Add comments ..."
+                  rows="3"
+                  activity="user comments for design generation"
+                />
+              </div>
             )}
-          </button>
+            <button 
+              className="floating-create-design-btn"
+              onClick={handleCreateDesign}
+              disabled={isCreatingDesign || sliders.length === 0}
+              onMouseEnter={() => {
+                setTimeout(() => {
+                  setShowCommentsBox(true)
+                  if (commentsInputRef.current) {
+                    commentsInputRef.current.focus()
+                  }
+                }, 2000)
+              }}
+              activity="create design"
+            >
+              {isCreatingDesign ? (
+                <>
+                  <div className="spinner"></div>
+                  Creating Design...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  Create Design
+                </>
+              )}
+            </button>
+          </div>
         )}
         </div>
       </div>

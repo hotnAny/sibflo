@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ChevronRight, ChevronLeft, X, Plus, Key, Save, Check, Palette, Loader2, Download, Trash2, Activity, FileText } from 'lucide-react'
 import { modelService, GEMINI_MODELS } from '../services/model'
 import { genDesignSpace, generateTask } from '../services/generationService'
@@ -18,6 +18,9 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
   const [isGeneratingDesignSpace, setIsGeneratingDesignSpace] = useState(false)
   const [sessions, setSessions] = useState([])
   const [isLoadingSessions, setIsLoadingSessions] = useState(false)
+  const [showCommentsBox, setShowCommentsBox] = useState(false)
+  const [comments, setComments] = useState('')
+  const commentsInputRef = useRef(null)
 
   // Load API key from localStorage on component mount
   useEffect(() => {
@@ -41,6 +44,23 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
       loadSessions()
     }
   }, [activeTab])
+
+  // Click outside handler for comments box
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showCommentsBox && commentsInputRef.current && !commentsInputRef.current.contains(event.target)) {
+        setShowCommentsBox(false)
+      }
+    }
+
+    if (showCommentsBox) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCommentsBox])
 
   const loadSessions = async () => {
     setIsLoadingSessions(true)
@@ -167,6 +187,14 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
     })
   }
 
+  const handleCommentsChange = (e) => {
+    setComments(e.target.value)
+    onFormDataChange({
+      ...formData,
+      comments: e.target.value
+    })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isApiKeySet) {
@@ -231,7 +259,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
         goal: formData.goal,
         tasks: tasksToUse,
         examples: formData.examples,
-        comments: formData.comments
+        comments: comments || formData.comments
       })
       console.log('📊 Created new trial:', trialId)
 
@@ -241,7 +269,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
         goal: formData.goal,
         tasks: tasksToUse,
         examples: formData.examples,
-        userComments: formData.comments
+        userComments: comments || formData.comments
       })
 
       // Convert design space dimensions to sliders
@@ -416,7 +444,7 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                 </div>
 
                 {/* Comments Section */}
-                <div className="form-section" activity="input comments section">
+                {/* <div className="form-section" activity="input comments section">
                   <label className="section-label">Comments</label>
                   <textarea
                     name="comments"
@@ -427,13 +455,41 @@ const LeftPanel = ({ isOpen, onToggle, onDesignSpaceGenerated, formData, onFormD
                     rows="3"
                     activity="input comments"
                   />
-                </div>
+                </div> */}
 
-                <button type="submit" className="create-btn" disabled={!isApiKeySet || isGeneratingDesignSpace} activity="generate design space">
-                  {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Palette size={16} />}
-                  &nbsp;&nbsp;
-                  {isGeneratingDesignSpace ? 'Generating...' : 'Generate Design Space'}
-                </button>
+                <div className="submit-section" activity="submit button and floating comments container">
+                  {showCommentsBox && (
+                    <div className="floating-comments-box" activity="floating comments input">
+                      <textarea
+                        ref={commentsInputRef}
+                        value={comments}
+                        onChange={handleCommentsChange}
+                        className="comments-textarea"
+                        placeholder="Add comments ..."
+                        rows="3"
+                        activity="user comments for design space generation"
+                      />
+                    </div>
+                  )}
+                  <button 
+                    type="submit" 
+                    className="create-btn" 
+                    disabled={!isApiKeySet || isGeneratingDesignSpace} 
+                    onMouseEnter={() => {
+                      setTimeout(() => {
+                        setShowCommentsBox(true)
+                        if (commentsInputRef.current) {
+                          commentsInputRef.current.focus()
+                        }
+                      }, 2000)
+                    }}
+                    activity="generate design space"
+                  >
+                    {isGeneratingDesignSpace ? <Loader2 size={16} className="spinner" /> : <Palette size={16} />}
+                    &nbsp;&nbsp;
+                    {isGeneratingDesignSpace ? 'Generating...' : 'Generate Design Space'}
+                  </button>
+                </div>
               </form>
             </>
           )}

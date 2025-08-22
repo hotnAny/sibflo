@@ -404,7 +404,7 @@
 
 /* Fixed floating create design button */
 .floating-create-design-btn {
-  position: absolute;
+  position: relative;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
@@ -455,6 +455,53 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.submit-section {
+  position: relative;
+  margin-top: 20px;
+}
+
+.floating-comments-box {
+  position: absolute;
+  bottom: auto;
+  top: -90px;
+  left: 0;
+  right: 0;
+  transform: translateY(-100%);
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.comments-textarea {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  border-radius: 6px;
+}
+
+.comments-textarea:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
  

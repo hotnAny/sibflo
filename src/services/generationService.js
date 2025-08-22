@@ -59,11 +59,12 @@ export async function genDesignSpace({ context, user, goal, tasks, examples = []
 }
 
 // Generate multiple high-level overall designs
-export async function genOverallDesigns({ designParameters = null }) {
+export async function genOverallDesigns({ designParameters = null, userComments = null }) {
   const startTime = Date.now();
   
   const input = {
-    designParameters: designParameters || "No specific design parameters provided"
+    designParameters: designParameters || "No specific design parameters provided",
+    userComments: userComments || "No specific user comments provided"
   };
 
   console.log('🔗 Service: genOverallDesigns - RAW INPUT:', input);
@@ -85,7 +86,8 @@ export async function genOverallDesigns({ designParameters = null }) {
       designs: parsedResult,
       duration: duration,
       input: {
-        designParameters: input.designParameters
+        designParameters: input.designParameters,
+        userComments: input.userComments
       }
     });
     
@@ -146,7 +148,7 @@ export function updateScreenDescriptions(screenDescriptions) {
 
 // Generate UI code for a single screen
   // This function can be used to generate UI code for individual screens on demand
-  export async function generateSingleScreenUI (screenSpecification, qualityModeToUse = 'fast') {
+  export async function generateSingleScreenUI (screenSpecification, qualityModeToUse = 'fast', userComments = null) {
     console.log('🎨 Starting single screen UI generation:', screenSpecification, 'with quality mode:', qualityModeToUse)
     
     if (!screenSpecification) {
@@ -158,6 +160,7 @@ export function updateScreenDescriptions(screenDescriptions) {
         screenDescriptions: [screenSpecification],
         critiques: ["Fix issues or errors of the existing UI code and generate a new version of the UI code for the same screen"],
         qualityMode: qualityModeToUse,
+        userComments: userComments,
         onProgress: () => {
           console.log(`📝 Progress: Single screen code generated (${qualityModeToUse} mode)`)
         }
@@ -178,7 +181,7 @@ export function updateScreenDescriptions(screenDescriptions) {
   }
 
 // New streaming version that updates UI as each screen completes
-export async function genUICodesStreaming({ screenDescriptions, critiques = [], qualityMode = 'fast', onProgress = null }) {
+export async function genUICodesStreaming({ screenDescriptions, critiques = [], qualityMode = 'fast', onProgress = null, userComments = null }) {
   const startTime = Date.now();
   
   try {
@@ -196,11 +199,15 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
         const adaptedModels = createAdaptedModels();
         const model = qualityMode === 'high' ? adaptedModels.modelPro : adaptedModels.modelLite;
         
-        console.log(`🎨 Generating UI code for screen ${index + 1} using ${qualityMode} mode (${qualityMode === 'high' ? 'modelPro' : 'modelLite'})`);
+        console.log(`🎨 Generating UI code for screen ${index + 1} })`, "RAW INPUT:", {
+          screenDescription: JSON.stringify(screen, null, 2),
+          userComments: userComments || "No specific user comments provided"
+        });
         
         // Format the prompt
         const prompt = await promptSVGCodeGeneration.format({
-          screenDescription: JSON.stringify(screen, null, 2)
+          screenDescription: JSON.stringify(screen, null, 2),
+          userComments: userComments || "No specific user comments provided"
         });
         
         // Generate the code using the selected model
@@ -226,7 +233,7 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
         
         // Call progress callback if provided - this will update the UI immediately
         if (onProgress) {
-          onProgress([...streamingCodes], index, cleanedCode);
+          onProgress([...streamingCodes], index, cleanedCode)
         }
         
         console.log(`✅ Generated UI code for screen ${index + 1}/${screenDescriptions.length} using ${qualityMode} mode`);
@@ -237,7 +244,7 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
         streamingCodes[index] = errorCode;
         
         if (onProgress) {
-          onProgress([...streamingCodes], index, errorCode);
+          onProgress([...streamingCodes], index, errorCode)
         }
         
         return {
@@ -269,7 +276,8 @@ export async function genUICodesStreaming({ screenDescriptions, critiques = [], 
       qualityMode: qualityMode,
       input: {
         screenDescriptions: screenDescriptions,
-        critiques: critiques
+        critiques: critiques,
+        userComments: userComments
       }
     });
     

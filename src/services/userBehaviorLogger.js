@@ -217,7 +217,7 @@ class UserBehaviorLogger {
       this.logEvent(event.type, target, activity)
     } else {
       // Log filtered events for debugging (optional)
-      console.log(`🔍 Event filtered (no activity attribute): ${event.type} on ${event.target.tagName?.toLowerCase()}`)
+      // console.log(`🔍 Event filtered (no activity attribute): ${event.type} on ${event.target.tagName?.toLowerCase()}`)
     }
   }
 
@@ -259,7 +259,7 @@ class UserBehaviorLogger {
     }
     
     // Console log every entry for debugging
-    console.log('🔍 User Behavior Log:', logEntry)
+    // console.log('🔍 User Behavior Log:', logEntry)
     
     this.buffer.push(logEntry)
     

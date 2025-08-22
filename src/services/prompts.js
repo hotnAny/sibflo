@@ -2,9 +2,11 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 
 export const promptOverallDesign = PromptTemplate.fromTemplate(
-  `Analyze the following information and follow the specific design parameters to generate 5 distinct high-level design concepts that can support the user to accomplish their goal by performing the tasks. These design ideas should directly address each of the following design parameters:
+  `Analyze the following information and follow the specific design parameters and user comments to generate 5 distinct high-level design concepts that can support the user to accomplish their goal by performing the tasks. These design ideas should directly address each of the following design parameters:
 
   Design Parameters: {designParameters}
+
+  User Comments: {userComments}
 
   Format the output as a JSON array where each design object has these fields:
   - design_id: A unique integer identifier
@@ -16,6 +18,7 @@ export const promptOverallDesign = PromptTemplate.fromTemplate(
   - Your response must be a valid JSON array. Do not include any text before or after the JSON.
   - Do not mark the response as JSON using "~~~json".
   - Do not include any backticks, code fences, or language tags. Return only the raw JSON array.
+  - Consider the user comments when generating designs to better align with user preferences and feedback.
   `
 );
 
@@ -331,9 +334,13 @@ You are an expert UI wire‑framing assistant. Produce one complete, valid SVG t
 SCREEN DESCRIPTION:
 {screenDescription}
 
+USER COMMENTS & PREFERENCES:
+{userComments}
+
 MUST‑HAVE ELEMENTS & BEHAVIORS:
-- Include every UI element listed in “elements”.
-- Implement every behavior in “functionality”.
+- Include every UI element listed in "elements".
+- Implement every behavior in "functionality".
+- Consider the user's comments and preferences when designing the wireframe layout and style.
 
 STYLE & FORMAT RULES:
 1. Root <svg> must include a proper viewBox.
@@ -420,6 +427,9 @@ export const promptCritiqueToChanges = PromptTemplate.fromTemplate(
   Critiques to Address:
   {critiques}
 
+  User Comments & Preferences:
+  {userComments}
+
   Context:
   The target is SVG code that represents a wireframe UI mockup. This is a hand-drawn style wireframe.
 
@@ -432,6 +442,8 @@ export const promptCritiqueToChanges = PromptTemplate.fromTemplate(
   - Don't suggest changes to elements not mentioned in critiques
   - Consider the context of the UI element and its purpose
   - Changes should maintain the wireframe aesthetic (hand-drawn style, grayscale colors)
+  - Consider user comments and preferences when determining the best approach to implementing changes
+  - Apply user feedback to influence design decisions and improvements
 
   Types of Changes Allowed:
   1) Add UI elements - Create new SVG elements (rect, circle, text, line, etc.) to add missing UI components
@@ -463,6 +475,7 @@ export const promptCritiqueToChanges = PromptTemplate.fromTemplate(
   - For 'add' changes, specify the complete SVG element with attributes.
   - For 'modify' changes, specify exact attribute changes.
   - For 'remove' changes, identify the element to delete.
+  - Consider user comments when making design decisions and improvements.
   `
 );
 
@@ -474,6 +487,9 @@ export const promptApplyChangesToSVG = PromptTemplate.fromTemplate(
 
   Changes to Apply:
   {changes}
+
+  User Comments & Preferences:
+  {userComments}
 
   Requirements:
   - Apply only the specific changes listed in the changes array
@@ -492,6 +508,8 @@ export const promptApplyChangesToSVG = PromptTemplate.fromTemplate(
   - Use standard SVG elements: rect, circle, ellipse, line, polyline, polygon, path, text
   - Include proper viewBox attribute on the root svg element
   - Use stroke and fill attributes for styling
+  - Consider user comments and preferences when implementing changes
+  - Apply changes in a way that aligns with user feedback and design preferences
 
   IMPORTANT: 
   - Return only the complete revised SVG code. Do not include any explanations or text before or after the code. 
@@ -499,6 +517,7 @@ export const promptApplyChangesToSVG = PromptTemplate.fromTemplate(
   - Ensure all SVG attributes are properly formatted and complete.
   - Make only the changes specified - do not add, remove, or modify other elements.
   - This is a surgical revision, not a complete regeneration.
+  - When implementing changes, consider how they align with user preferences and feedback.
   `
 );
 
